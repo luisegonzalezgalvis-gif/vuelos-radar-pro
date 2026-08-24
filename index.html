@@ -504,24 +504,24 @@
       const [userEmail, setUserEmail] = useState(() => {
         try {
           const saved = localStorage.getItem('vuelos_radar_user_email');
-          return saved || 'luis.e.gonzalezgalvis@gmail.com';
+          return saved || 'luis.e.gonzalezgalvis0523@gmail.com';
         } catch (e) {
-          return 'luis.e.gonzalezgalvis@gmail.com';
+          return 'luis.e.gonzalezgalvis0523@gmail.com';
         }
       });
       const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
 
-      // Estado de servicio de correo (EmailJS / Formspree / Webhook)
+      // Estado de servicio de correo (EmailJS / Formspree / Webhook / FormSubmit)
       const [emailjsServiceId, setEmailjsServiceId] = useState(() => localStorage.getItem('vuelos_emailjs_service_id') || '');
       const [emailjsTemplateId, setEmailjsTemplateId] = useState(() => localStorage.getItem('vuelos_emailjs_template_id') || '');
       const [emailjsPublicKey, setEmailjsPublicKey] = useState(() => localStorage.getItem('vuelos_emailjs_public_key') || '');
-      const [webhookAlertUrl, setWebhookAlertUrl] = useState(() => localStorage.getItem('vuelos_webhook_alert_url') || 'https://formspree.io/f/sample_vuelos_radar');
+      const [webhookAlertUrl, setWebhookAlertUrl] = useState(() => localStorage.getItem('vuelos_webhook_alert_url') || '');
 
       // Estado de la Consola Terminal de Diagnóstico en Tiempo Real
       const [logs, setLogs] = useState([
         { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro Engine v5.0 iniciado.' },
         { id: 2, time: new Date().toLocaleTimeString(), type: 'INFO', tag: 'RADAR', msg: '📡 Monitoreando 15 rutas VIP calibradas con Google Flights ($COP).' },
-        { id: 3, time: new Date().toLocaleTimeString(), type: 'OK', tag: 'CORREO', msg: `📧 Canal de alertas listo para enviar avisos reales ➔ ${userEmail}` }
+        { id: 3, time: new Date().toLocaleTimeString(), type: 'OK', tag: 'CORREO', msg: `📧 Canal de alertas listo para envío directo ➔ ${userEmail}` }
       ]);
       const [autoScrollLogs, setAutoScrollLogs] = useState(true);
       const terminalEndRef = useRef(null);
@@ -599,8 +599,37 @@
 
         let sentSuccess = false;
 
-        // 1. Intentar envío por Webhook REST / Formspree / Make
-        if (webhookAlertUrl) {
+        // 1. Intentar envío directo por API FormSubmit.co (Sin claves requeridas)
+        try {
+          const formSubmitUrl = `https://formsubmit.co/ajax/${encodeURIComponent(userEmail)}`;
+          const resp = await fetch(formSubmitUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+              _subject: subject,
+              _template: 'table',
+              _captcha: 'false',
+              email_destino: userEmail,
+              mensaje: bodyText,
+              origen: routeData?.origin || '',
+              destino: routeData?.destination || '',
+              precio_nuevo: routeData?.newRecord ? formatCOP(routeData.newRecord) : '',
+              sistema: 'VuelosRadar Pro CO'
+            })
+          });
+
+          if (resp.ok) {
+            addLog('OK', 'CORREO_FORMSUBMIT_200', `✅ Notificación enviada con éxito a ${userEmail} vía FormSubmit`);
+            sentSuccess = true;
+          } else {
+            addLog('WARN', 'CORREO_FORMSUBMIT_ERR', `Servidor FormSubmit respondió con código HTTP ${resp.status}`);
+          }
+        } catch (e) {
+          addLog('WARN', 'CORREO_FORMSUBMIT_ERR', `Error de conexión FormSubmit: ${e.message}`);
+        }
+
+        // 2. Intentar envío por Webhook REST personalizado si está configurado
+        if (!sentSuccess && webhookAlertUrl) {
           try {
             const resp = await fetch(webhookAlertUrl, {
               method: 'POST',
@@ -618,7 +647,7 @@
             });
 
             if (resp.ok) {
-              addLog('OK', 'CORREO_WEBHOOK_200', `✅ Notificación enviada con éxito vía Webhook/Formspree a ${userEmail}`);
+              addLog('OK', 'CORREO_WEBHOOK_200', `✅ Notificación enviada con éxito vía Webhook a ${userEmail}`);
               sentSuccess = true;
             } else {
               addLog('WARN', 'CORREO_WEBHOOK_ERR', `Servidor Webhook respondió con código HTTP ${resp.status}`);
@@ -628,7 +657,7 @@
           }
         }
 
-        // 2. Intentar envío por EmailJS si hay clave configurada
+        // 3. Intentar envío por EmailJS si hay clave configurada
         if (!sentSuccess && window.emailjs && emailjsServiceId && emailjsTemplateId && emailjsPublicKey) {
           try {
             window.emailjs.init(emailjsPublicKey);
@@ -649,7 +678,7 @@
         }
 
         if (!sentSuccess) {
-          addLog('INFO', 'CORREO_STATUS', `📩 Alerta registrada en la app para ${userEmail}. Ingresa tu URL de Formspree o claves EmailJS en "Configurar Alertas Correo" para recibirlo directamente en tu bandeja de entrada.`);
+          addLog('INFO', 'CORREO_STATUS', `📩 Nota: La primera vez que FormSubmit te envía un correo, te llegará un mensaje de confirmación a tu buzón (${userEmail}). Haz clic en "Activate" en ese correo para activar la entrega automática instantánea de tus alertas.`);
         }
 
         return sentSuccess;
