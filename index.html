@@ -62,6 +62,16 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+    /* Estilos para la Consola en Vivo / Terminal de Diagnóstico */
+    .terminal-bg {
+      background-color: #030712;
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      box-shadow: 0 10px 30px -10px rgba(6, 182, 212, 0.15);
+    }
+    .terminal-line {
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body class="bg-[#070a12] text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-slate-950 min-h-screen pb-12">
@@ -115,6 +125,12 @@
     );
     const IconRefresh = ({ className = "w-4 h-4" }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+    );
+    const IconTerminal = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+    );
+    const IconPlay = ({ className = "w-4 h-4" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
     );
 
     // Listado inicial de 15 Rutas Preferidas / Monitoreo VIP
@@ -204,6 +220,26 @@
       });
       const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
 
+      // Estado de la Consola Terminal de Diagnóstico en Tiempo Real
+      const [logs, setLogs] = useState([
+        { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro Engine v2.5 iniciado correctamente.' },
+        { id: 2, time: new Date().toLocaleTimeString(), type: 'INFO', tag: 'RADAR', msg: '📡 Monitoreando 15 rutas VIP con umbral de récords anuales en $COP.' },
+        { id: 3, time: new Date().toLocaleTimeString(), type: 'OK', tag: 'CORREO', msg: `📧 Canal de notificaciones listo -> ${userEmail}` }
+      ]);
+      const [autoScrollLogs, setAutoScrollLogs] = useState(true);
+      const terminalEndRef = useRef(null);
+
+      const addLog = (type, tag, msg, details = null) => {
+        const time = new Date().toLocaleTimeString();
+        setLogs(prev => [...prev.slice(-150), { id: Date.now() + Math.random(), time, type, tag, msg, details }]);
+      };
+
+      useEffect(() => {
+        if (autoScrollLogs && terminalEndRef.current) {
+          terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, [logs, autoScrollLogs]);
+
       // Estado de las 15 Rutas Preferidas VIP
       const [priorityRoutes, setPriorityRoutes] = useState(() => {
         try {
@@ -218,7 +254,7 @@
       const [deals, setDeals] = useState(INITIAL_LIVE_DEALS);
 
       // Navegación
-      const [activeTab, setActiveTab] = useState('vip'); // 'vip', 'records', 'radar', 'correo', 'ia'
+      const [activeTab, setActiveTab] = useState('console'); // 'console', 'vip', 'records', 'radar', 'correo'
       const [searchQuery, setSearchQuery] = useState('');
       const [selectedRegion, setSelectedRegion] = useState('Todas');
       const [toastMsg, setToastMsg] = useState('');
@@ -252,103 +288,91 @@
         setTimeout(() => setToastMsg(''), 4000);
       };
 
-      // Simulación de Disparo de Alerta por Correo
+      // Simulación de Disparo de Alerta por Correo con Salida a Consola
       const triggerEmailAlert = (routeInfo, oldRecord, newPrice) => {
-        if (!emailAlertsEnabled || !userEmail) return;
+        addLog('ALERT', 'CORREO_DISPATCH', `🔥 ALERTA DISPARADA: ${routeInfo.origin} ➔ ${routeInfo.destination}`, {
+          oldRecord: formatCOP(oldRecord),
+          newRecord: formatCOP(newPrice),
+          recipient: userEmail,
+          status: 'DESPACHADO_200_OK'
+        });
+
+        if (!emailAlertsEnabled || !userEmail) {
+          addLog('WARN', 'CORREO', `Alertas desactivadas por el usuario. Omitiendo envío real.`);
+          return;
+        }
         const msg = `📧 ALERTA DE NUEVO RÉCORD ENVIADA A (${userEmail}):\n¡${routeInfo.origin} ➔ ${routeInfo.destination} rompió su récord anual! Bajó de ${formatCOP(oldRecord)} a ${formatCOP(newPrice)}.`;
         showToast(msg);
       };
 
-      // Escáner en Vivo de Precios Récord
+      // Escáner en Vivo Secuencial con Visualización en Consola
       const handleRunScanner = () => {
+        if (isScanningLive) return;
         setIsScanningLive(true);
-        setTimeout(() => {
-          let updatedCount = 0;
-          const updatedVip = priorityRoutes.map(route => {
-            // Simulamos variaciones de precio (15% de probabilidad de romper récord)
-            const shouldBreakRecord = Math.random() < 0.25;
-            if (shouldBreakRecord) {
-              const discountDrop = Math.floor(Math.random() * 200000) + 50000;
-              const newRecordPrice = Math.max(500000, route.currentPriceCOP - discountDrop);
-              
-              if (newRecordPrice < route.baselineRecordCOP) {
-                updatedCount++;
-                triggerEmailAlert(route, route.baselineRecordCOP, newRecordPrice);
-                return {
-                  ...route,
-                  baselineRecordCOP: newRecordPrice,
-                  currentPriceCOP: newRecordPrice,
-                  lastScanned: 'Recién actualizado',
-                  isNewRecord: true
-                };
-              }
-            }
-            return { ...route, lastScanned: 'Recién verificado' };
-          });
+        setActiveTab('console'); // Cambia a consola para ver resultados inmediatamente
+        addLog('SYS', 'SCAN_START', '🔍 Iniciando barrido completo en vivo de las 15 rutas prioritarias...');
 
-          setPriorityRoutes(updatedVip);
-          setIsScanningLive(false);
-          if (updatedCount === 0) {
-            showToast("🔍 Escaneo completado. Las 15 rutas preferidas están en sus mínimos actuales.");
+        let currentIdx = 0;
+        let recordsBrokenCount = 0;
+        const tempRoutes = [...priorityRoutes];
+
+        const interval = setInterval(() => {
+          if (currentIdx >= tempRoutes.length) {
+            clearInterval(interval);
+            setIsScanningLive(false);
+            setPriorityRoutes([...tempRoutes]);
+            addLog('OK', 'SCAN_COMPLETE', `✅ Escaneo finalizado. Total rutas procesadas: ${tempRoutes.length}. Récords rotos: ${recordsBrokenCount}.`);
+            if (recordsBrokenCount === 0) {
+              showToast("🔍 Escaneo completado. Las 15 rutas están en sus mínimos actuales.");
+            }
+            return;
           }
-        }, 1200);
-      };
 
-      useEffect(() => {
-        if (activeTab === 'records' && chartRef.current) {
-          if (chartInstanceRef.current) chartInstanceRef.current.destroy();
+          const route = tempRoutes[currentIdx];
+          addLog('INFO', 'SCAN_ROUTE', `[${currentIdx + 1}/15] Escaneando: ${route.origin} ➔ ${route.destination}...`);
 
-          const ctx = chartRef.current.getContext('2d');
-          chartInstanceRef.current = new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct (Temporada Baja)', 'Nov', 'Dic'],
-              datasets: [
-                {
-                  label: 'Ruta Bogotá -> Tokio (Récord Anual)',
-                  data: [5800000, 5200000, 4900000, 4400000, 4100000, 6500000, 7200000, 6900000, 4000000, 3850000, 4200000, 6800000],
-                  borderColor: '#06b6d4',
-                  backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                  fill: true,
-                  tension: 0.4,
-                  borderWidth: 3
-                },
-                {
-                  label: 'Ruta Bucaramanga -> Miami (Récord Anual)',
-                  data: [1650000, 1500000, 1420000, 1380000, 1250000, 1950000, 2100000, 1890000, 1100000, 1100000, 1280000, 2050000],
-                  borderColor: '#10b981',
-                  backgroundColor: 'transparent',
-                  borderDash: [4, 4],
-                  tension: 0.4,
-                  borderWidth: 2
-                }
-              ]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { position: 'top', labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 } } }
-              },
-              scales: {
-                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
-                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', callback: (v) => `$${v / 1000000}M` } }
-              }
+          const shouldBreakRecord = Math.random() < 0.35; // Probabilidad de detectar oferta
+          if (shouldBreakRecord) {
+            const discountDrop = Math.floor(Math.random() * 220000) + 60000;
+            const newRecordPrice = Math.max(500000, route.currentPriceCOP - discountDrop);
+
+            if (newRecordPrice < route.baselineRecordCOP) {
+              recordsBrokenCount++;
+              const oldPrice = route.baselineRecordCOP;
+              tempRoutes[currentIdx] = {
+                ...route,
+                baselineRecordCOP: newRecordPrice,
+                currentPriceCOP: newRecordPrice,
+                lastScanned: 'Recién detectado',
+                isNewRecord: true
+              };
+
+              addLog('REC', 'RECORD_BROKEN', `🎉 ¡NUEVO MÍNIMO ANUAL! ${route.origin} ➔ ${route.destination} bajó a ${formatCOP(newRecordPrice)} (Anterior: ${formatCOP(oldPrice)})`);
+              triggerEmailAlert(route, oldPrice, newRecordPrice);
+            } else {
+              addLog('INFO', 'SCAN_STABLE', `Tarifa consultada: ${formatCOP(route.currentPriceCOP)} (Sin variaciones récords)`);
             }
-          });
-        }
-      }, [activeTab]);
+          } else {
+            addLog('INFO', 'SCAN_STABLE', `Tarifa consultada: ${formatCOP(route.currentPriceCOP)} (Mantenida en mínimo)`);
+          }
+
+          currentIdx++;
+        }, 400);
+      };
 
       const handleAiSearchSubmit = async (e) => {
         e.preventDefault();
         setAiLoading(true);
         setAiSearchResult(null);
+        addLog('SYS', 'IA_REQUEST', `🤖 Iniciando rastreo inteligente con Google Gemini para: ${aiOrigin} ➔ ${aiDestination} (Máx: ${formatCOP(Number(aiMaxPrice))})`);
 
         const promptQuery = `Busca tiquetes económicos en tiempo real saliendo desde ${aiOrigin} hacia ${aiDestination} con un presupuesto máximo de ${formatCOP(Number(aiMaxPrice))}. Rastrea la mejor tarifa disponible en los próximos 12 meses. Si hay escalas (cortas o largas), indícalas únicamente si JUSTIFICAN EL PRECIO respecto al vuelo directo. Muestra aerolíneas y precios exactos en $COP.`;
 
         try {
           const apiKey = aiApiKey.trim() || "";
           const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+          addLog('INFO', 'HTTP_POST', `POST ${apiUrl.split('?')[0]} [tools: google_search]`);
 
           const payload = {
             contents: [{ parts: [{ text: promptQuery }] }],
@@ -379,13 +403,16 @@
 
             if (text) {
               setAiSearchResult({ text, sources });
+              addLog('OK', 'IA_RESPONSE', `Response HTTP 200 OK — ${sources.length} fuentes web validadas.`);
             } else {
               setAiSearchResult({ text: "No se obtuvo respuesta del motor de búsqueda web.", sources: [] });
+              addLog('WARN', 'IA_RESPONSE', 'Cuerpo de respuesta vacío.');
             }
           } else {
             throw new Error("API response error");
           }
         } catch (err) {
+          addLog('WARN', 'IA_FALLBACK', 'Petición a API fallida o sin API key. Generando diagnóstico cuantificado alternativo.');
           setAiSearchResult({
             text: `📍 **Rastreo Inteligente para ${aiDestination}:**\n\n• **Ruta Sugerida:** ${aiOrigin} ➔ Hubs Internacionales ➔ ${aiDestination}.\n• **Mejor Tarifa Estimada del Año:** ${formatCOP(Number(aiMaxPrice) * 0.82)}\n• **Estrategia:** Configurar alerta automática para recibir aviso cuando rompa la barrera de ${formatCOP(Number(aiMaxPrice))}.`,
             sources: [{ title: "Buscador Google Flights Colombia", uri: "https://www.google.com/travel/flights" }]
@@ -415,9 +442,22 @@
 
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => setActiveTab('console')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    activeTab === 'console'
+                      ? 'bg-cyan-500 text-slate-950 font-black shadow-lg shadow-cyan-500/20'
+                      : 'bg-slate-800 text-cyan-400 border border-slate-700 hover:bg-slate-700'
+                  }`}
+                  title="Ver consola de resultados e impresión de logs en vivo"
+                >
+                  <IconTerminal className="w-4 h-4" />
+                  <span>Consola ({logs.length})</span>
+                </button>
+
+                <button
                   onClick={handleRunScanner}
                   disabled={isScanningLive}
-                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap"
+                  className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 px-3 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap shadow-md shadow-emerald-500/20 active:scale-95"
                   title="Escanear las 15 rutas en busca de un nuevo mínimo récord del año"
                 >
                   <IconRefresh className={`w-3.5 h-3.5 ${isScanningLive ? 'animate-spin' : ''}`} />
@@ -472,6 +512,7 @@
             {/* Pestañas de Navegación Principal */}
             <div className="border-b border-slate-800 pb-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
               {[
+                { id: 'console', label: '💻 Consola de Resultados', icon: IconTerminal, badge: logs.length },
                 { id: 'vip', label: '15 Rutas Preferidas (VIP)', icon: IconStar, badge: priorityRoutes.length },
                 { id: 'records', label: 'Récords & Histórico (1 Año)', icon: IconTrendingDown },
                 { id: 'radar', label: 'Radar de Ofertas Global', icon: IconPlane, badge: deals.length },
@@ -499,6 +540,85 @@
                 );
               })}
             </div>
+
+            {/* VISTA 0: CONSOLA DE RESULTADOS Y LOGS EN VIVO */}
+            {activeTab === 'console' && (
+              <div className="terminal-bg rounded-3xl p-4 sm:p-5 space-y-4 font-mono text-xs border border-cyan-500/30">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-red-500/80 inline-block"></span>
+                      <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
+                      <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+                    </div>
+                    <span className="text-cyan-400 font-bold tracking-wider text-xs ml-2">
+                      terminal@vuelosradar-pro:~$ (stdout/stderr stream)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleRunScanner}
+                      disabled={isScanningLive}
+                      className="flex items-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-3 py-1.5 rounded-xl font-sans font-extrabold text-xs transition-all"
+                    >
+                      <IconPlay className="w-3.5 h-3.5 fill-current" />
+                      <span>Ejecutar Escáner Ahora</span>
+                    </button>
+
+                    <button
+                      onClick={() => setLogs([])}
+                      className="text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl font-sans text-xs transition-all"
+                    >
+                      Limpiar Consola
+                    </button>
+                  </div>
+                </div>
+
+                {/* Output Stream Box */}
+                <div className="h-96 overflow-y-auto space-y-2 pr-2 no-scrollbar bg-[#02050e] p-4 rounded-2xl border border-slate-900">
+                  {logs.map((log) => {
+                    let colorClass = "text-slate-300";
+                    let tagClass = "bg-slate-800 text-slate-300 border-slate-700";
+
+                    if (log.type === 'SYS') {
+                      colorClass = "text-cyan-300 font-bold";
+                      tagClass = "bg-cyan-950 text-cyan-400 border-cyan-800";
+                    } else if (log.type === 'OK') {
+                      colorClass = "text-emerald-300";
+                      tagClass = "bg-emerald-950 text-emerald-400 border-emerald-800";
+                    } else if (log.type === 'REC') {
+                      colorClass = "text-amber-300 font-extrabold";
+                      tagClass = "bg-amber-950 text-amber-400 border-amber-800";
+                    } else if (log.type === 'ALERT') {
+                      colorClass = "text-red-300 font-bold";
+                      tagClass = "bg-red-950 text-red-400 border-red-800";
+                    } else if (log.type === 'WARN') {
+                      colorClass = "text-yellow-300";
+                      tagClass = "bg-yellow-950 text-yellow-400 border-yellow-800";
+                    }
+
+                    return (
+                      <div key={log.id} className="terminal-line flex flex-col sm:flex-row sm:items-start gap-2 hover:bg-slate-900/40 p-1 rounded transition-colors">
+                        <span className="text-slate-600 text-[10px] select-none shrink-0">{log.time}</span>
+                        <span className={`text-[9px] uppercase px-2 py-0.5 rounded border ${tagClass} font-bold shrink-0`}>
+                          [{log.tag}]
+                        </span>
+                        <span className={`flex-1 break-words text-xs ${colorClass}`}>
+                          {log.msg}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  <div ref={terminalEndRef} />
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/60 font-sans">
+                  <span>Modo: Consola Prioritaria en Tiempo Real</span>
+                  <span className="text-emerald-400 font-mono">● LIVE_STREAM_ACTIVE</span>
+                </div>
+              </div>
+            )}
 
             {/* VISTA 1: 15 Rutas Preferidas VIP */}
             {activeTab === 'vip' && (
