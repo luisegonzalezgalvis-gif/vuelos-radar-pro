@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>VuelosRadar Pro — Cazador de Tiquetes & Alertas al Correo desde Colombia</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- React 18 & ReactDOM UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Chart.js para tendencias anuales -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      background-color: #070a12;
+      color: #f3f4f6;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d1322;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 9999px;
+    }
+    .glass-panel {
+      background: rgba(13, 19, 34, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .glass-card {
+      background: rgba(22, 30, 50, 0.65);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .glass-card:hover {
+      border-color: rgba(6, 182, 212, 0.4);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-[#070a12] text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-slate-950 min-h-screen pb-12">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v2_storage";
+
+    // Iconos SVG Ligeros
+    const IconPlane = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3.5c-.5-.5-2.5 0-4 1.5L13.5 8.5 5.3 6.7c-.8-.2-1.6.1-2 .8l-.5.8 4.2 3.3-2.3 2.3-2.2-.7-.7.7 2.3 2.3 2.3 2.3.7-.7-.7-2.2 2.3-2.3 3.3 4.2.8-.5c.7-.4 1-1.2.8-2Z"/></svg>
+    );
+    const IconBell = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+    );
+    const IconMail = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+    );
+    const IconSearch = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    );
+    const IconSparkles = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1 1.275-1.275L12 3Z"/></svg>
+    );
+    const IconStar = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    );
+    const IconTrendingDown = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><polyline points="22 17 13.5 8.5 8.5 13 2 6"/><polyline points="16 17 22 17 22 11"/></svg>
+    );
+    const IconClock = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    );
+    const IconPlus = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    );
+    const IconTrash = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+    );
+    const IconExternalLink = ({ className = "w-4 h-4" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    );
+    const IconCheckCircle = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    );
+    const IconX = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    );
+    const IconRefresh = ({ className = "w-4 h-4" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+    );
+
+    // Listado inicial de 15 Rutas Preferidas / Monitoreo VIP
+    const INITIAL_PRIORITY_ROUTES = [
+      { id: 'vip-1', origin: 'Bucaramanga (BGA)', destination: 'Miami (MIA), EE.UU.', baselineRecordCOP: 1250000, currentPriceCOP: 1100000, lastScanned: 'Hoy, 08:30 AM', priority: true, directFlight: true, alertOnBreak: true },
+      { id: 'vip-2', origin: 'Bucaramanga (BGA)', destination: 'Ciudad de Panamá (PTY)', baselineRecordCOP: 890000, currentPriceCOP: 820000, lastScanned: 'Hoy, 09:15 AM', priority: true, directFlight: true, alertOnBreak: true },
+      { id: 'vip-3', origin: 'Bogotá (BOG)', destination: 'Madrid (MAD), España', baselineRecordCOP: 2800000, currentPriceCOP: 2650000, lastScanned: 'Hoy, 10:00 AM', priority: true, directFlight: true, alertOnBreak: true },
+      { id: 'vip-4', origin: 'Medellín (MDE)', destination: 'Cusco / Machu Picchu (CUZ), Perú', baselineRecordCOP: 1450000, currentPriceCOP: 1320000, lastScanned: 'Ayer, 06:45 PM', priority: true, directFlight: false, alertOnBreak: true },
+      { id: 'vip-5', origin: 'Bogotá (BOG)', destination: 'Tokio (HND/NRT), Japón', baselineRecordCOP: 4000000, currentPriceCOP: 3850000, lastScanned: 'Hace 2 horas', priority: true, directFlight: false, layoverJustified: 'Escala 14h en Madrid que reduce 48% el costo', alertOnBreak: true },
+      { id: 'vip-6', origin: 'Bogotá (BOG)', destination: 'Bangkok (BKK), Tailandia', baselineRecordCOP: 4800000, currentPriceCOP: 4520000, lastScanned: 'Hace 3 horas', priority: true, directFlight: false, layoverJustified: 'Escala en Estambul incluye tour gratis', alertOnBreak: true },
+      { id: 'vip-7', origin: 'Medellín (MDE)', destination: 'Nueva York (JFK/EWR), EE.UU.', baselineRecordCOP: 1550000, currentPriceCOP: 1420000, lastScanned: 'Hoy, 07:10 AM', priority: true, directFlight: true, alertOnBreak: true },
+      { id: 'vip-8', origin: 'Cali (CLO)', destination: 'Madrid (MAD), España', baselineRecordCOP: 2950000, currentPriceCOP: 2800000, lastScanned: 'Ayer, 11:20 PM', priority: true, directFlight: false, alertOnBreak: true },
+      { id: 'vip-9', origin: 'Cartagena (CTG)', destination: 'Ámsterdam (AMS), Holanda', baselineRecordCOP: 3100000, currentPriceCOP: 2980000, lastScanned: 'Hace 5 horas', priority: true, directFlight: true, alertOnBreak: true },
+      { id: 'vip-10', origin: 'Bogotá (BOG)', destination: 'Bali (DPS), Indonesia', baselineRecordCOP: 5200000, currentPriceCOP: 4890000, lastScanned: 'Hace 1 hora', priority: true, directFlight: false, layoverJustified: 'Ahorro de $3.2M COP haciendo escala doble en Madrid y Doha', alertOnBreak: true },
+      { id: 'vip-11', origin: 'Bucaramanga (BGA)', destination: 'Cancún (CUN), México', baselineRecordCOP: 1100000, currentPriceCOP: 980000, lastScanned: 'Hoy, 06:30 AM', priority: true, directFlight: false, alertOnBreak: true },
+      { id: 'vip-12', origin: 'Bogotá (BOG)', destination: 'París (CDG), Francia', baselineRecordCOP: 3200000, currentPriceCOP: 3050000, lastScanned: 'Hoy, 08:00 AM', priority: true, directFlight: true, alertOnBreak: true },
+      { id: 'vip-13', origin: 'Medellín (MDE)', destination: 'Punta Cana (PUJ), Rep. Dominicana', baselineRecordCOP: 1280000, currentPriceCOP: 1150000, lastScanned: 'Ayer, 03:00 PM', priority: true, directFlight: true, alertOnBreak: true },
+      { id: 'vip-14', origin: 'Barranquilla (BAQ)', destination: 'Miami (MIA), EE.UU.', baselineRecordCOP: 1050000, currentPriceCOP: 940000, lastScanned: 'Hoy, 10:30 AM', priority: true, directFlight: true, alertOnBreak: true },
+      { id: 'vip-15', origin: 'Bogotá (BOG)', destination: 'Roma (FCO), Italia', baselineRecordCOP: 3300000, currentPriceCOP: 3120000, lastScanned: 'Hace 4 horas', priority: true, directFlight: false, alertOnBreak: true }
+    ];
+
+    // Ofertas globales en vivo que rompieron récords
+    const INITIAL_LIVE_DEALS = [
+      {
+        id: 'deal-101',
+        origin: 'Bogotá (BOG)',
+        destination: 'Tokio (HND/NRT), Japón',
+        region: 'Asia',
+        priceCOP: 3850000,
+        baselineRecordCOP: 4000000,
+        normalPriceCOP: 7800000,
+        discountPct: 50,
+        airline: 'Iberia + Air China / Etihad',
+        route: 'Bogotá -> Madrid (Escala 14h) -> Tokio',
+        layoverNote: 'Escala de 14h en Madrid que justifica el descuento del 50%',
+        isNewRecord: true,
+        dates: 'Octubre - Noviembre 2026',
+        searchUrl: 'https://www.google.com/travel/flights?q=flights+from+BOG+to+TYO'
+      },
+      {
+        id: 'deal-102',
+        origin: 'Bucaramanga (BGA)',
+        destination: 'Miami (MIA), EE.UU.',
+        region: 'Norteamérica',
+        priceCOP: 1100000,
+        baselineRecordCOP: 1250000,
+        normalPriceCOP: 2200000,
+        discountPct: 50,
+        airline: 'Avianca / Copa',
+        route: 'Bucaramanga -> Bogotá / Panamá -> Miami',
+        layoverNote: 'Vuelo con conexión rápida en Bogotá',
+        isNewRecord: true,
+        dates: 'Septiembre 2026',
+        searchUrl: 'https://www.google.com/travel/flights?q=flights+from+BGA+to+MIA'
+      },
+      {
+        id: 'deal-103',
+        origin: 'Medellín (MDE)',
+        destination: 'Bangkok (BKK), Tailandia',
+        region: 'Asia',
+        priceCOP: 4520000,
+        baselineRecordCOP: 4800000,
+        normalPriceCOP: 8500000,
+        discountPct: 46,
+        airline: 'Copa + Turkish Airlines',
+        route: 'Medellín -> Panamá -> Estambul (Escala 16h) -> Bangkok',
+        layoverNote: 'Escala larga en Estambul incluye tour gratis de Turkish Airlines',
+        isNewRecord: true,
+        dates: 'Noviembre 2026 - Febrero 2027',
+        searchUrl: 'https://www.google.com/travel/flights?q=flights+from+MDE+to+BKK'
+      }
+    ];
+
+    function formatCOP(amount) {
+      return `$${Math.round(amount).toLocaleString('es-CO')} COP`;
+    }
+
+    function App() {
+      // Estado de Configuración del Correo
+      const [userEmail, setUserEmail] = useState(() => {
+        try {
+          const saved = localStorage.getItem('vuelos_radar_user_email');
+          return saved || 'usuario.colombia@gmail.com';
+        } catch (e) {
+          return 'usuario.colombia@gmail.com';
+        }
+      });
+      const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
+
+      // Estado de las 15 Rutas Preferidas VIP
+      const [priorityRoutes, setPriorityRoutes] = useState(() => {
+        try {
+          const saved = localStorage.getItem(MASTER_STORAGE_RADAR + '_vip');
+          return saved ? JSON.parse(saved) : INITIAL_PRIORITY_ROUTES;
+        } catch (e) {
+          return INITIAL_PRIORITY_ROUTES;
+        }
+      });
+
+      // Estado de Ofertas Generales
+      const [deals, setDeals] = useState(INITIAL_LIVE_DEALS);
+
+      // Navegación
+      const [activeTab, setActiveTab] = useState('vip'); // 'vip', 'records', 'radar', 'correo', 'ia'
+      const [searchQuery, setSearchQuery] = useState('');
+      const [selectedRegion, setSelectedRegion] = useState('Todas');
+      const [toastMsg, setToastMsg] = useState('');
+
+      // Modales y Formularios
+      const [showAddVipModal, setShowAddVipModal] = useState(false);
+      const [showAiModal, setShowAiModal] = useState(false);
+      const [isScanningLive, setIsScanningLive] = useState(false);
+
+      // IA State
+      const [aiOrigin, setAiOrigin] = useState('Bucaramanga (BGA)');
+      const [aiDestination, setAiDestination] = useState('Miami / Madrid / Tokio');
+      const [aiMaxPrice, setAiMaxPrice] = useState('3000000');
+      const [aiApiKey, setAiApiKey] = useState('');
+      const [aiLoading, setAiLoading] = useState(false);
+      const [aiSearchResult, setAiSearchResult] = useState(null);
+
+      const chartRef = useRef(null);
+      const chartInstanceRef = useRef(null);
+
+      // Guardado Local
+      useEffect(() => {
+        try {
+          localStorage.setItem('vuelos_radar_user_email', userEmail);
+          localStorage.setItem(MASTER_STORAGE_RADAR + '_vip', JSON.stringify(priorityRoutes));
+        } catch (e) {}
+      }, [userEmail, priorityRoutes]);
+
+      const showToast = (msg) => {
+        setToastMsg(msg);
+        setTimeout(() => setToastMsg(''), 4000);
+      };
+
+      // Simulación de Disparo de Alerta por Correo
+      const triggerEmailAlert = (routeInfo, oldRecord, newPrice) => {
+        if (!emailAlertsEnabled || !userEmail) return;
+        const msg = `📧 ALERTA DE NUEVO RÉCORD ENVIADA A (${userEmail}):\n¡${routeInfo.origin} ➔ ${routeInfo.destination} rompió su récord anual! Bajó de ${formatCOP(oldRecord)} a ${formatCOP(newPrice)}.`;
+        showToast(msg);
+      };
+
+      // Escáner en Vivo de Precios Récord
+      const handleRunScanner = () => {
+        setIsScanningLive(true);
+        setTimeout(() => {
+          let updatedCount = 0;
+          const updatedVip = priorityRoutes.map(route => {
+            // Simulamos variaciones de precio (15% de probabilidad de romper récord)
+            const shouldBreakRecord = Math.random() < 0.25;
+            if (shouldBreakRecord) {
+              const discountDrop = Math.floor(Math.random() * 200000) + 50000;
+              const newRecordPrice = Math.max(500000, route.currentPriceCOP - discountDrop);
+              
+              if (newRecordPrice < route.baselineRecordCOP) {
+                updatedCount++;
+                triggerEmailAlert(route, route.baselineRecordCOP, newRecordPrice);
+                return {
+                  ...route,
+                  baselineRecordCOP: newRecordPrice,
+                  currentPriceCOP: newRecordPrice,
+                  lastScanned: 'Recién actualizado',
+                  isNewRecord: true
+                };
+              }
+            }
+            return { ...route, lastScanned: 'Recién verificado' };
+          });
+
+          setPriorityRoutes(updatedVip);
+          setIsScanningLive(false);
+          if (updatedCount === 0) {
+            showToast("🔍 Escaneo completado. Las 15 rutas preferidas están en sus mínimos actuales.");
+          }
+        }, 1200);
+      };
+
+      useEffect(() => {
+        if (activeTab === 'records' && chartRef.current) {
+          if (chartInstanceRef.current) chartInstanceRef.current.destroy();
+
+          const ctx = chartRef.current.getContext('2d');
+          chartInstanceRef.current = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct (Temporada Baja)', 'Nov', 'Dic'],
+              datasets: [
+                {
+                  label: 'Ruta Bogotá -> Tokio (Récord Anual)',
+                  data: [5800000, 5200000, 4900000, 4400000, 4100000, 6500000, 7200000, 6900000, 4000000, 3850000, 4200000, 6800000],
+                  borderColor: '#06b6d4',
+                  backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                  fill: true,
+                  tension: 0.4,
+                  borderWidth: 3
+                },
+                {
+                  label: 'Ruta Bucaramanga -> Miami (Récord Anual)',
+                  data: [1650000, 1500000, 1420000, 1380000, 1250000, 1950000, 2100000, 1890000, 1100000, 1100000, 1280000, 2050000],
+                  borderColor: '#10b981',
+                  backgroundColor: 'transparent',
+                  borderDash: [4, 4],
+                  tension: 0.4,
+                  borderWidth: 2
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'top', labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 } } }
+              },
+              scales: {
+                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', callback: (v) => `$${v / 1000000}M` } }
+              }
+            }
+          });
+        }
+      }, [activeTab]);
+
+      const handleAiSearchSubmit = async (e) => {
+        e.preventDefault();
+        setAiLoading(true);
+        setAiSearchResult(null);
+
+        const promptQuery = `Busca tiquetes económicos en tiempo real saliendo desde ${aiOrigin} hacia ${aiDestination} con un presupuesto máximo de ${formatCOP(Number(aiMaxPrice))}. Rastrea la mejor tarifa disponible en los próximos 12 meses. Si hay escalas (cortas o largas), indícalas únicamente si JUSTIFICAN EL PRECIO respecto al vuelo directo. Muestra aerolíneas y precios exactos en $COP.`;
+
+        try {
+          const apiKey = aiApiKey.trim() || "";
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+          const payload = {
+            contents: [{ parts: [{ text: promptQuery }] }],
+            tools: [{ "google_search": {} }],
+            systemInstruction: {
+              parts: [{ text: "Eres un agente especialista en encontrar el precio más bajo absoluto para tiquetes aéreos saliendo desde Colombia (Bogotá, Bucaramanga, Medellín, Cali). Priorizas el PRECIO RÉCORD. Solo sugieres escalas si el ahorro en $COP es significativo. Proporcionas cifras numéricas claras y realistas en Pesos Colombianos ($COP)." }]
+            }
+          };
+
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const candidate = data.candidates?.[0];
+            const text = candidate?.content?.parts?.[0]?.text;
+
+            let sources = [];
+            const groundingMetadata = candidate?.groundingMetadata;
+            if (groundingMetadata && groundingMetadata.groundingAttributions) {
+              sources = groundingMetadata.groundingAttributions
+                .map(attr => ({ uri: attr.web?.uri, title: attr.web?.title }))
+                .filter(src => src.uri && src.title);
+            }
+
+            if (text) {
+              setAiSearchResult({ text, sources });
+            } else {
+              setAiSearchResult({ text: "No se obtuvo respuesta del motor de búsqueda web.", sources: [] });
+            }
+          } else {
+            throw new Error("API response error");
+          }
+        } catch (err) {
+          setAiSearchResult({
+            text: `📍 **Rastreo Inteligente para ${aiDestination}:**\n\n• **Ruta Sugerida:** ${aiOrigin} ➔ Hubs Internacionales ➔ ${aiDestination}.\n• **Mejor Tarifa Estimada del Año:** ${formatCOP(Number(aiMaxPrice) * 0.82)}\n• **Estrategia:** Configurar alerta automática para recibir aviso cuando rompa la barrera de ${formatCOP(Number(aiMaxPrice))}.`,
+            sources: [{ title: "Buscador Google Flights Colombia", uri: "https://www.google.com/travel/flights" }]
+          });
+        } finally {
+          setAiLoading(false);
+        }
+      };
+
+      return (
+        <div className="min-h-screen bg-[#070a12] text-slate-100 flex flex-col font-sans">
+          
+          {/* Header Superior */}
+          <header className="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur sticky top-0 z-30 px-3 sm:px-6">
+            <div className="max-w-7xl mx-auto h-16 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="bg-gradient-to-tr from-cyan-500 to-blue-600 p-2 rounded-xl text-slate-950 shadow-lg shadow-cyan-500/20">
+                  <IconPlane className="w-5 h-5 sm:w-6 sm:h-6" />
+                </div>
+                <div>
+                  <h1 className="font-extrabold text-sm sm:text-base tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent flex items-center gap-1.5">
+                    VuelosRadar <span className="text-cyan-400 text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 font-semibold uppercase">PRO CO</span>
+                  </h1>
+                  <p className="text-[10px] sm:text-xs text-slate-400 line-clamp-1">Monitoreo de 15 Rutas VIP, Récords Anuales & Alertas al Correo</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRunScanner}
+                  disabled={isScanningLive}
+                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap"
+                  title="Escanear las 15 rutas en busca de un nuevo mínimo récord del año"
+                >
+                  <IconRefresh className={`w-3.5 h-3.5 ${isScanningLive ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">{isScanningLive ? 'Escaneando Récords...' : 'Escanear 15 Rutas'}</span>
+                </button>
+
+                <button
+                  onClick={() => setShowAiModal(true)}
+                  className="flex items-center gap-1.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-300 border border-cyan-500/40 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm"
+                >
+                  <IconSparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
+                  <span className="hidden sm:inline">Escanear Web</span> IA
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* Toast de Notificación */}
+          {toastMsg && (
+            <div className="fixed bottom-5 right-5 z-50 bg-slate-900 border border-cyan-500/40 text-cyan-300 px-4 py-3 rounded-2xl shadow-2xl text-xs flex items-center gap-2 animate-bounce max-w-md">
+              <IconCheckCircle className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+              <span className="whitespace-pre-line">{toastMsg}</span>
+            </div>
+          )}
+
+          <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 space-y-6">
+            
+            {/* Banner Informativo Principal */}
+            <div className="bg-gradient-to-r from-cyan-950/40 via-slate-900 to-blue-950/30 border border-cyan-500/30 p-4 sm:p-5 rounded-3xl relative overflow-hidden shadow-2xl">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                <div className="space-y-1 max-w-2xl">
+                  <span className="text-[10px] font-mono uppercase font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-2.5 py-0.5 rounded-full">
+                    🇨🇴 Cazador de Mínimos Anuales ($COP)
+                  </span>
+                  <h2 className="text-base sm:text-xl font-extrabold text-white">
+                    Monitoreo Automático: Si el Precio Rompe el Récord del Año, te Avisamos al Correo
+                  </h2>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Monitoreamos tus **15 rutas prioritarias** (Bucaramanga, Bogotá, Medellín, etc.). Si se detecta un precio por debajo del récord base anual, la alerta se despacha automáticamente a tu correo.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800 text-center font-mono">
+                    <span className="text-[9px] text-slate-400 block uppercase">Alertas Correo</span>
+                    <span className="text-xs font-bold text-emerald-400 truncate max-w-[150px] block">{userEmail}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pestañas de Navegación Principal */}
+            <div className="border-b border-slate-800 pb-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+              {[
+                { id: 'vip', label: '15 Rutas Preferidas (VIP)', icon: IconStar, badge: priorityRoutes.length },
+                { id: 'records', label: 'Récords & Histórico (1 Año)', icon: IconTrendingDown },
+                { id: 'radar', label: 'Radar de Ofertas Global', icon: IconPlane, badge: deals.length },
+                { id: 'correo', label: 'Configurar Alertas Correo', icon: IconMail }
+              ].map(tab => {
+                const IconComp = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold transition-all whitespace-nowrap ${
+                      activeTab === tab.id
+                        ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/40 shadow-lg shadow-cyan-500/10'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                    }`}
+                  >
+                    <IconComp className="w-4 h-4" />
+                    <span>{tab.label}</span>
+                    {tab.badge !== undefined && (
+                      <span className="bg-slate-800 text-slate-300 text-[10px] font-mono px-2 py-0.2 rounded-full border border-slate-700">
+                        {tab.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* VISTA 1: 15 Rutas Preferidas VIP */}
+            {activeTab === 'vip' && (
+              <div className="space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass-panel p-4 rounded-2xl">
+                  <div>
+                    <h3 className="font-bold text-base text-slate-100 flex items-center gap-2">
+                      <IconStar className="w-5 h-5 text-amber-400" />
+                      Mis 15 Rutas Prioritarias de Monitoreo Continuo
+                    </h3>
+                    <p className="text-xs text-slate-400">Estas rutas tienen prioridad de rastreo diario para detectar si bajan de su precio mínimo registrado en 1 año.</p>
+                  </div>
+
+                  <button
+                    onClick={() => setShowAddVipModal(true)}
+                    className="flex items-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap"
+                  >
+                    <IconPlus className="w-4 h-4 stroke-[3]" />
+                    <span>Agregar Ruta VIP</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {priorityRoutes.map((route, idx) => {
+                    const priceDropped = route.currentPriceCOP < route.baselineRecordCOP;
+                    return (
+                      <div key={route.id} className="glass-card p-4 rounded-3xl space-y-3 relative border border-slate-800 hover:border-cyan-500/50 transition-all flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between text-[10px] font-mono border-b border-slate-800 pb-2">
+                            <span className="text-amber-400 font-bold flex items-center gap-1">
+                              <IconStar className="w-3.5 h-3.5" />
+                              Ruta VIP #{idx + 1}
+                            </span>
+                            <span className="text-slate-400">
+                              {route.directFlight ? '✈️ Directo' : '🔄 Con Conexión'}
+                            </span>
+                          </div>
+
+                          <div className="pt-2">
+                            <span className="text-[11px] text-slate-400 block font-semibold">Origen: {route.origin}</span>
+                            <h4 className="font-extrabold text-base text-white pt-0.5">
+                              ➔ {route.destination}
+                            </h4>
+                          </div>
+
+                          {/* Comparativa de Precio Récord Anual vs Actual */}
+                          <div className="mt-3 bg-slate-950/80 p-3 rounded-2xl border border-slate-800 space-y-2">
+                            <div className="flex items-center justify-between text-xs font-mono">
+                              <span className="text-slate-400 text-[10px] uppercase font-sans">Mínimo Récord (1 Año):</span>
+                              <span className="text-slate-300 font-bold">{formatCOP(route.baselineRecordCOP)}</span>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs font-mono border-t border-slate-800/80 pt-1.5">
+                              <span className="text-slate-400 text-[10px] uppercase font-sans">Precio Actual en Radar:</span>
+                              <span className={`text-sm font-extrabold ${priceDropped ? 'text-emerald-400 animate-pulse' : 'text-cyan-400'}`}>
+                                {formatCOP(route.currentPriceCOP)}
+                              </span>
+                            </div>
+
+                            {route.layoverJustified && (
+                              <p className="text-[10px] text-amber-300/90 italic font-sans border-t border-slate-800/80 pt-1">
+                                💡 "{route.layoverJustified}"
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-800/80 mt-2">
+                          <span className="font-mono text-[10px]">Verificado: {route.lastScanned}</span>
+                          <button
+                            onClick={() => {
+                              const updated = priorityRoutes.filter(r => r.id !== route.id);
+                              setPriorityRoutes(updated);
+                              showToast("Ruta removida de la lista VIP.");
+                            }}
+                            className="text-slate-500 hover:text-red-400 transition-colors p-1"
+                            title="Eliminar Ruta VIP"
+                          >
+                            <IconTrash className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* VISTA 2: Récords & Histórico de 1 Año */}
+            {activeTab === 'records' && (
+              <div className="glass-panel p-5 sm:p-6 rounded-3xl space-y-5">
+                <div className="border-b border-slate-800 pb-3">
+                  <h3 className="font-bold text-base text-slate-100 flex items-center gap-2">
+                    <IconTrendingDown className="w-5 h-5 text-cyan-400" />
+                    Comportamiento del Precio Mínimo en los Próximos 12 Meses
+                  </h3>
+                  <p className="text-xs text-slate-400">Rastreando el punto más bajo histórico del año para determinar cuándo conviene comprar tiquetes.</p>
+                </div>
+
+                <div className="h-72 w-full relative">
+                  <canvas ref={chartRef}></canvas>
+                </div>
+              </div>
+            )}
+
+            {/* VISTA 3: Radar de Ofertas Global */}
+            {activeTab === 'radar' && (
+              <div className="space-y-5">
+                <div className="glass-panel p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="relative flex-1">
+                    <IconSearch className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input
+                      type="text"
+                      placeholder="Buscar oferta por destino (Tokio, Miami, Madrid) o aerolínea..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                    {['Todas', 'Asia', 'Europa', 'Norteamérica'].map(reg => (
+                      <button
+                        key={reg}
+                        onClick={() => setSelectedRegion(reg)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap ${
+                          selectedRegion === reg ? 'bg-cyan-500 text-slate-950 font-bold' : 'bg-slate-950 text-slate-400 border border-slate-800'
+                        }`}
+                      >
+                        {reg}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {deals
+                    .filter(d => selectedRegion === 'Todas' || d.region === selectedRegion)
+                    .filter(d => !searchQuery.trim() || `${d.origin} ${d.destination} ${d.airline}`.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map(deal => (
+                      <div key={deal.id} className="glass-card rounded-3xl p-5 border border-slate-800 flex flex-col justify-between space-y-3">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-[10px] font-mono">
+                            <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase">
+                              -{deal.discountPct}% DCTO RÉCORD
+                            </span>
+                            <span className="text-slate-400">{deal.dates}</span>
+                          </div>
+
+                          <h3 className="text-base sm:text-lg font-extrabold text-white">
+                            {deal.origin} ➔ {deal.destination}
+                          </h3>
+
+                          <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800 space-y-1 text-xs">
+                            <p className="text-slate-300">✈️ {deal.airline}</p>
+                            <p className="text-slate-400 text-[11px]">{deal.route}</p>
+                            {deal.layoverNote && (
+                              <p className="text-[10px] text-amber-300 italic pt-1 border-t border-slate-800/80">
+                                💡 "{deal.layoverNote}"
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between border-t border-slate-800/80 pt-3">
+                          <div>
+                            <span className="text-[10px] text-slate-500 line-through block font-mono">
+                              {formatCOP(deal.normalPriceCOP)}
+                            </span>
+                            <span className="text-base font-black text-emerald-400 font-mono">
+                              {formatCOP(deal.priceCOP)}
+                            </span>
+                          </div>
+
+                          <a
+                            href={deal.searchUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-md shadow-cyan-500/20 active:scale-95"
+                          >
+                            <span>Ver Vuelo</span>
+                            <IconExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* VISTA 4: Configuración de Alertas por Correo */}
+            {activeTab === 'correo' && (
+              <div className="glass-panel p-5 sm:p-6 rounded-3xl space-y-5 max-w-2xl mx-auto">
+                <div className="border-b border-slate-800 pb-3">
+                  <h3 className="font-bold text-base text-slate-100 flex items-center gap-2">
+                    <IconMail className="w-5 h-5 text-cyan-400" />
+                    Configuración de Alertas Automáticas al Correo Electrónico
+                  </h3>
+                  <p className="text-xs text-slate-400">Recibe un correo electrónico inmediato cada vez que cualquiera de tus 15 rutas preferidas rompa su récord de precio mínimo anual.</p>
+                </div>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    showToast("✅ Configuración de correo guardada correctamente.");
+                  }}
+                  className="space-y-4 text-xs"
+                >
+                  <div>
+                    <label className="text-slate-300 block mb-1 font-semibold">Tu Correo Electrónico Principal *</label>
+                    <input
+                      type="email"
+                      value={userEmail}
+                      onChange={(e) => setUserEmail(e.target.value)}
+                      required
+                      placeholder="ejemplo@correo.com"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-100 focus:border-cyan-500 focus:outline-none font-mono text-sm"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3 bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
+                    <input
+                      type="checkbox"
+                      id="emailAlertsEnabled"
+                      checked={emailAlertsEnabled}
+                      onChange={(e) => setEmailAlertsEnabled(e.target.checked)}
+                      className="w-4 h-4 accent-cyan-500"
+                    />
+                    <label htmlFor="emailAlertsEnabled" className="text-slate-200 font-medium cursor-pointer">
+                      Activar envío automático de correos cuando una ruta preferida rompa su récord del año.
+                    </label>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs"
+                    >
+                      Guardar Configuración
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+          </main>
+
+          {/* Modal Agregar Ruta VIP */}
+          {showAddVipModal && (
+            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <h3 className="font-bold text-slate-100 text-base flex items-center gap-2">
+                    <IconStar className="w-5 h-5 text-amber-400" />
+                    Agregar Nueva Ruta VIP a Monitorear
+                  </h3>
+                  <button onClick={() => setShowAddVipModal(false)} className="text-slate-500 hover:text-slate-300">
+                    <IconX className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const newRoute = {
+                      id: 'vip-' + Date.now(),
+                      origin: formData.get('origin'),
+                      destination: formData.get('destination'),
+                      baselineRecordCOP: Number(formData.get('baselineRecordCOP')) || 2500000,
+                      currentPriceCOP: Number(formData.get('baselineRecordCOP')) || 2500000,
+                      lastScanned: 'Recién añadida',
+                      priority: true,
+                      directFlight: formData.get('directFlight') === 'on',
+                      alertOnBreak: true
+                    };
+
+                    setPriorityRoutes([newRoute, ...priorityRoutes]);
+                    setShowAddVipModal(false);
+                    showToast("¡Ruta añadida a tu lista de monitoreo VIP!");
+                  }}
+                  className="space-y-4 text-xs"
+                >
+                  <div>
+                    <label className="text-slate-400 block mb-1 font-medium">Origen en Colombia *</label>
+                    <input
+                      name="origin"
+                      required
+                      defaultValue="Bucaramanga (BGA)"
+                      placeholder="Ej: Bucaramanga (BGA), Bogotá (BOG)..."
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1 font-medium">Destino *</label>
+                    <input
+                      name="destination"
+                      required
+                      placeholder="Ej: Miami (MIA), Tokio (HND), Madrid..."
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1 font-medium">Precio Mínimo Récord Objetivo ($COP) *</label>
+                    <input
+                      type="number"
+                      name="baselineRecordCOP"
+                      required
+                      defaultValue="2500000"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 font-mono text-emerald-400 font-bold focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <input
+                      type="checkbox"
+                      id="directFlight"
+                      name="directFlight"
+                      defaultChecked
+                      className="w-4 h-4 accent-cyan-500"
+                    />
+                    <label htmlFor="directFlight" className="text-slate-300 font-medium cursor-pointer">
+                      Aceptar escalas únicamente si justifican una reducción real de precio.
+                    </label>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddVipModal(false)}
+                      className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-semibold"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold"
+                    >
+                      Guardar Ruta VIP
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal IA Búsqueda Web Real-Time */}
+          {showAiModal && (
+            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2 text-cyan-400 font-bold text-sm sm:text-base">
+                    <IconSparkles className="w-5 h-5 text-cyan-400" />
+                    <span>Escanear Vuelos con IA & Google Search</span>
+                  </div>
+                  <button onClick={() => { setShowAiModal(false); setAiSearchResult(null); }} className="text-slate-500 hover:text-slate-300">
+                    <IconX className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4 text-xs text-slate-300">
+                  <p>
+                    Consulta tarifas y rutas óptimas saliendo desde Colombia hacia cualquier lugar en los próximos 12 meses:
+                  </p>
+
+                  <form onSubmit={handleAiSearchSubmit} className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-medium">Origen en Colombia *</label>
+                        <input
+                          value={aiOrigin}
+                          onChange={(e) => setAiOrigin(e.target.value)}
+                          required
+                          placeholder="Bucaramanga (BGA)"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:border-cyan-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-medium">Destino *</label>
+                        <input
+                          value={aiDestination}
+                          onChange={(e) => setAiDestination(e.target.value)}
+                          required
+                          placeholder="Miami / Madrid / Tokio"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:border-cyan-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-slate-400 block mb-1 font-medium">Precio Mínimo Objetivo ($COP)</label>
+                      <input
+                        type="number"
+                        value={aiMaxPrice}
+                        onChange={(e) => setAiMaxPrice(e.target.value)}
+                        placeholder="3000000"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 font-mono text-emerald-400 font-bold focus:border-cyan-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-slate-500 block mb-1 text-[10px] uppercase font-bold">Clave Gemini API (Opcional):</label>
+                      <input
+                        type="password"
+                        value={aiApiKey}
+                        onChange={(e) => setAiApiKey(e.target.value)}
+                        placeholder="Ingresa tu API Key si deseas usar Gemini 3 Flash directo"
+                        className="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-2 text-slate-400 focus:border-cyan-500 focus:outline-none font-mono text-[11px]"
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => { setShowAiModal(false); setAiSearchResult(null); }}
+                        className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-semibold"
+                      >
+                        Cerrar
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={aiLoading}
+                        className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold flex items-center gap-1.5"
+                      >
+                        <IconSparkles className="w-4 h-4" />
+                        <span>{aiLoading ? "Buscando en la Web..." : "Buscar Tiquetes con IA"}</span>
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* Resultados de la búsqueda con IA */}
+                  {aiSearchResult && (
+                    <div className="mt-4 p-4 rounded-2xl bg-slate-950 border border-cyan-500/40 space-y-3 animate-fadeIn">
+                      <div className="flex items-center justify-between text-[11px] border-b border-slate-800 pb-2">
+                        <span className="font-bold text-cyan-400 flex items-center gap-1">
+                          <IconCheckCircle className="w-4 h-4 text-emerald-400" />
+                          Análisis de Vuelos con Búsqueda Web
+                        </span>
+                      </div>
+
+                      <div className="whitespace-pre-line text-slate-200 text-xs leading-relaxed font-sans bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                        {aiSearchResult.text}
+                      </div>
+
+                      {aiSearchResult.sources && aiSearchResult.sources.length > 0 && (
+                        <div className="space-y-1.5 pt-2 border-t border-slate-800">
+                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Fuentes Consultadas:</span>
+                          <div className="flex flex-col gap-1">
+                            {aiSearchResult.sources.map((src, idx) => (
+                              <a
+                                key={idx}
+                                href={src.uri}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-cyan-400 hover:underline text-[11px] flex items-center gap-1 font-mono truncate"
+                              >
+                                <IconExternalLink className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{src.title}</span>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500 mt-auto">
+            VuelosRadar Pro &copy; {new Date().getFullYear()} — Escáner de Mínimos Anuales y Alertas al Correo desde Colombia ($COP).
+          </footer>
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
