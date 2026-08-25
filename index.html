@@ -151,6 +151,24 @@
         id: 'vip-1',
         origin: 'Bucaramanga (BGA)',
         originCode: 'BGA',
+        destination: 'Aruba (AUA)',
+        destCode: 'AUA',
+        departureDate: '2027-01-13',
+        returnDate: '2027-01-16',
+        baselineRecordCOP: 820711,
+        currentPriceCOP: 820711,
+        lastScanned: 'Hoy, 09:00 AM',
+        priority: true,
+        directFlight: true,
+        airline: 'Wingo (Vuelo Directo)',
+        airlineNote: 'Google Flights: Mínimo $820.711 COP con Wingo en vuelo directo (BGA - AUA).',
+        isSeparateTickets: false,
+        alertOnBreak: true
+      },
+      {
+        id: 'vip-2',
+        origin: 'Bucaramanga (BGA)',
+        originCode: 'BGA',
         destination: 'Ciudad de Panamá (PTY)',
         destCode: 'PTY',
         departureDate: '2026-10-05',
@@ -160,12 +178,13 @@
         lastScanned: 'Hoy, 08:30 AM',
         priority: true,
         directFlight: false,
+        airline: 'Avianca / Copa Airlines',
         airlineNote: 'Google Flights: Mínimo $1.294.696 COP. Avianca (1 escala): $1.591.480 COP. Copa Directo: $2.257.270 COP',
         isSeparateTickets: false,
         alertOnBreak: true
       },
       {
-        id: 'vip-2',
+        id: 'vip-3',
         origin: 'Bucaramanga (BGA)',
         originCode: 'BGA',
         destination: 'Miami (MIA), EE.UU.',
@@ -177,6 +196,7 @@
         lastScanned: 'Hoy, 09:15 AM',
         priority: true,
         directFlight: false,
+        airline: 'Avianca / Despegar',
         airlineNote: 'Tarifa mínima histórica en Despegar/Avianca $1.254.958 COP con escala corta en Bogotá',
         isSeparateTickets: false,
         alertOnBreak: true
@@ -1010,6 +1030,11 @@
                             <span className="text-[10px] text-cyan-400 font-mono block pt-1">
                               📅 Fechas: {route.departureDate} al {route.returnDate}
                             </span>
+                            {route.airline && (
+                              <span className="text-[11px] text-emerald-400 font-bold block pt-1">
+                                ✈️ Aerolínea: {route.airline}
+                              </span>
+                            )}
                           </div>
 
                           {/* Advertencia de Compra por Separado si aplica */}
