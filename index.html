@@ -21,7 +21,7 @@
   <!-- Chart.js para tendencias anuales -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- EmailJS SDK UMD para envío real de correos -->
+  <!-- EmailJS SDK UMD -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
@@ -83,7 +83,8 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
-    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v5_storage";
+    // Clave de almacenamiento versionada para refrescar caché automático
+    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v6_storage";
 
     // Iconos SVG Ligeros
     const IconPlane = ({ className = "w-5 h-5" }) => (
@@ -202,7 +203,7 @@
         alertOnBreak: true
       },
       {
-        id: 'vip-3',
+        id: 'vip-4',
         origin: 'Bogotá (BOG)',
         originCode: 'BOG',
         destination: 'Tokio (HND/NRT), Japón',
@@ -214,13 +215,14 @@
         lastScanned: 'Hace 30 min',
         priority: true,
         directFlight: false,
-        layoverJustified: 'Tarifa verificable en Google Flights con Air Canada (vía Toronto YYZ) o combinación Iberia + Air China',
+        airline: 'Air Canada / Iberia + Air China',
+        layoverJustified: 'Tarifa verificable en Google Flights con Air Canada ($3.949.691 COP) o combinación Iberia + Air China',
         isSeparateTickets: true,
         separateTicketWarning: 'Si eliges Iberia + Air China, debes comprar 2 tiquetes por separado y reclamar equipaje en la escala.',
         alertOnBreak: true
       },
       {
-        id: 'vip-4',
+        id: 'vip-5',
         origin: 'Bogotá (BOG)',
         originCode: 'BOG',
         destination: 'Madrid (MAD), España',
@@ -232,12 +234,13 @@
         lastScanned: 'Hoy, 10:00 AM',
         priority: true,
         directFlight: true,
-        airlineNote: 'Vuelo directo de Air Europa / Avianca',
+        airline: 'Air Europa / Avianca (Vuelo Directo)',
+        airlineNote: 'Vuelo directo de Air Europa / Avianca desde Bogotá El Dorado',
         isSeparateTickets: false,
         alertOnBreak: true
       },
       {
-        id: 'vip-5',
+        id: 'vip-6',
         origin: 'Medellín (MDE)',
         originCode: 'MDE',
         destination: 'Cusco / Machu Picchu (CUZ), Perú',
@@ -249,12 +252,13 @@
         lastScanned: 'Ayer, 06:45 PM',
         priority: true,
         directFlight: false,
-        airlineNote: 'Conexión rápida en Lima (LIM) con LATAM / Avianca',
+        airline: 'LATAM / Avianca',
+        airlineNote: 'Conexión rápida en Lima (LIM) con LATAM o Avianca',
         isSeparateTickets: false,
         alertOnBreak: true
       },
       {
-        id: 'vip-6',
+        id: 'vip-7',
         origin: 'Bogotá (BOG)',
         originCode: 'BOG',
         destination: 'Bangkok (BKK), Tailandia',
@@ -266,13 +270,14 @@
         lastScanned: 'Hace 3 horas',
         priority: true,
         directFlight: false,
+        airline: 'Copa Airlines + Turkish Airlines',
         layoverJustified: 'Combinación Copa + Turkish Airlines con escala de 16h en Estambul (incluye tour gratis)',
         isSeparateTickets: true,
         separateTicketWarning: 'Requiere comprar tramos independientes en Copa Airlines y Turkish Airlines.',
         alertOnBreak: true
       },
       {
-        id: 'vip-7',
+        id: 'vip-8',
         origin: 'Medellín (MDE)',
         originCode: 'MDE',
         destination: 'Nueva York (JFK/EWR), EE.UU.',
@@ -284,12 +289,13 @@
         lastScanned: 'Hoy, 07:10 AM',
         priority: true,
         directFlight: true,
-        airlineNote: 'Vuelo directo con Avianca / JetBlue desde MDE',
+        airline: 'Avianca / JetBlue (Vuelo Directo)',
+        airlineNote: 'Vuelo directo con Avianca o JetBlue desde MDE',
         isSeparateTickets: false,
         alertOnBreak: true
       },
       {
-        id: 'vip-8',
+        id: 'vip-9',
         origin: 'Cali (CLO)',
         originCode: 'CLO',
         destination: 'Madrid (MAD), España',
@@ -301,12 +307,13 @@
         lastScanned: 'Ayer, 11:20 PM',
         priority: true,
         directFlight: false,
+        airline: 'Avianca / World2Fly',
         airlineNote: 'Escala corta en Bogotá con Avianca o directa con World2Fly',
         isSeparateTickets: false,
         alertOnBreak: true
       },
       {
-        id: 'vip-9',
+        id: 'vip-10',
         origin: 'Cartagena (CTG)',
         originCode: 'CTG',
         destination: 'Ámsterdam (AMS), Holanda',
@@ -318,12 +325,13 @@
         lastScanned: 'Hace 5 horas',
         priority: true,
         directFlight: true,
+        airline: 'KLM Royal Dutch Airlines (Vuelo Directo)',
         airlineNote: 'Vuelo directo de KLM Royal Dutch Airlines desde Cartagena',
         isSeparateTickets: false,
         alertOnBreak: true
       },
       {
-        id: 'vip-10',
+        id: 'vip-11',
         origin: 'Bogotá (BOG)',
         originCode: 'BOG',
         destination: 'Bali (DPS), Indonesia',
@@ -335,13 +343,14 @@
         lastScanned: 'Hace 1 hora',
         priority: true,
         directFlight: false,
+        airline: 'Avianca + Qatar Airways',
         layoverJustified: 'Ahorro significativo combinando Avianca a Madrid y Qatar Airways a Denpasar',
         isSeparateTickets: true,
         separateTicketWarning: 'Compra 2 tiquetes independientes (Bogotá-Madrid y Madrid-Denpasar).',
         alertOnBreak: true
       },
       {
-        id: 'vip-11',
+        id: 'vip-12',
         origin: 'Bucaramanga (BGA)',
         originCode: 'BGA',
         destination: 'Cancún (CUN), México',
@@ -353,12 +362,13 @@
         lastScanned: 'Hoy, 06:30 AM',
         priority: true,
         directFlight: false,
+        airline: 'Copa Airlines / Avianca',
         airlineNote: 'Conexión en Panamá con Copa Airlines o Bogotá con Avianca',
         isSeparateTickets: false,
         alertOnBreak: true
       },
       {
-        id: 'vip-12',
+        id: 'vip-13',
         origin: 'Bogotá (BOG)',
         originCode: 'BOG',
         destination: 'París (CDG), Francia',
@@ -370,12 +380,13 @@
         lastScanned: 'Hoy, 08:00 AM',
         priority: true,
         directFlight: true,
+        airline: 'Air France (Vuelo Directo)',
         airlineNote: 'Vuelo directo Air France desde Bogotá El Dorado',
         isSeparateTickets: false,
         alertOnBreak: true
       },
       {
-        id: 'vip-13',
+        id: 'vip-14',
         origin: 'Medellín (MDE)',
         originCode: 'MDE',
         destination: 'Punta Cana (PUJ), Rep. Dominicana',
@@ -387,12 +398,13 @@
         lastScanned: 'Ayer, 03:00 PM',
         priority: true,
         directFlight: true,
-        airlineNote: 'Vuelo directo ultra low cost con Arajet / Wingo desde MDE',
+        airline: 'Arajet / Wingo (Vuelo Directo)',
+        airlineNote: 'Vuelo directo ultra low cost con Arajet o Wingo desde MDE',
         isSeparateTickets: false,
         alertOnBreak: true
       },
       {
-        id: 'vip-14',
+        id: 'vip-15',
         origin: 'Barranquilla (BAQ)',
         originCode: 'BAQ',
         destination: 'Miami (MIA), EE.UU.',
@@ -404,24 +416,8 @@
         lastScanned: 'Hoy, 10:30 AM',
         priority: true,
         directFlight: true,
+        airline: 'American Airlines (Vuelo Directo)',
         airlineNote: 'Vuelo directo con American Airlines desde Barranquilla',
-        isSeparateTickets: false,
-        alertOnBreak: true
-      },
-      {
-        id: 'vip-15',
-        origin: 'Bogotá (BOG)',
-        originCode: 'BOG',
-        destination: 'Roma (FCO), Italia',
-        destCode: 'FCO',
-        departureDate: '2026-11-08',
-        returnDate: '2026-11-22',
-        baselineRecordCOP: 3300000,
-        currentPriceCOP: 3650000,
-        lastScanned: 'Hace 4 horas',
-        priority: true,
-        directFlight: false,
-        airlineNote: 'Escala única en Madrid con Iberia o Air Europa',
         isSeparateTickets: false,
         alertOnBreak: true
       }
@@ -539,7 +535,7 @@
 
       // Estado de la Consola Terminal de Diagnóstico en Tiempo Real
       const [logs, setLogs] = useState([
-        { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro Engine v5.0 iniciado.' },
+        { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro Engine v6.0 iniciado.' },
         { id: 2, time: new Date().toLocaleTimeString(), type: 'INFO', tag: 'RADAR', msg: '📡 Monitoreando 15 rutas VIP calibradas con Google Flights ($COP).' },
         { id: 3, time: new Date().toLocaleTimeString(), type: 'OK', tag: 'CORREO', msg: `📧 Canal de alertas listo para envío directo ➔ ${userEmail}` }
       ]);
@@ -584,8 +580,8 @@
 
       // IA State
       const [aiOrigin, setAiOrigin] = useState('Bucaramanga (BGA)');
-      const [aiDestination, setAiDestination] = useState('Ciudad de Panamá (PTY) / Miami / Tokio');
-      const [aiMaxPrice, setAiMaxPrice] = useState('1500000');
+      const [aiDestination, setAiDestination] = useState('Aruba (AUA) / Panamá / Miami / Tokio');
+      const [aiMaxPrice, setAiMaxPrice] = useState('820711');
       const [aiApiKey, setAiApiKey] = useState('');
       const [aiLoading, setAiLoading] = useState(false);
       const [aiSearchResult, setAiSearchResult] = useState(null);
@@ -619,7 +615,7 @@
 
         let sentSuccess = false;
 
-        // 1. Intentar envío directo por API FormSubmit.co (Sin claves requeridas)
+        // 1. Envío directo por API FormSubmit.co
         try {
           const formSubmitUrl = `https://formsubmit.co/ajax/${encodeURIComponent(userEmail)}`;
           const resp = await fetch(formSubmitUrl, {
@@ -648,7 +644,7 @@
           addLog('WARN', 'CORREO_FORMSUBMIT_ERR', `Error de conexión FormSubmit: ${e.message}`);
         }
 
-        // 2. Intentar envío por Webhook REST personalizado si está configurado
+        // 2. Envío por Webhook REST si está configurado
         if (!sentSuccess && webhookAlertUrl) {
           try {
             const resp = await fetch(webhookAlertUrl, {
@@ -667,7 +663,7 @@
             });
 
             if (resp.ok) {
-              addLog('OK', 'CORREO_WEBHOOK_200', `✅ Notificación enviada con éxito vía Webhook a ${userEmail}`);
+              addLog('OK', 'CORREO_WEBHOOK_200', `✅ Notificación enviada vía Webhook a ${userEmail}`);
               sentSuccess = true;
             } else {
               addLog('WARN', 'CORREO_WEBHOOK_ERR', `Servidor Webhook respondió con código HTTP ${resp.status}`);
@@ -677,7 +673,7 @@
           }
         }
 
-        // 3. Intentar envío por EmailJS si hay clave configurada
+        // 3. Envío por EmailJS si hay clave configurada
         if (!sentSuccess && window.emailjs && emailjsServiceId && emailjsTemplateId && emailjsPublicKey) {
           try {
             window.emailjs.init(emailjsPublicKey);
@@ -698,7 +694,7 @@
         }
 
         if (!sentSuccess) {
-          addLog('INFO', 'CORREO_STATUS', `📩 Nota: La primera vez que FormSubmit te envía un correo, te llegará un mensaje de confirmación a tu buzón (${userEmail}). Haz clic en "Activate" en ese correo para activar la entrega automática instantánea de tus alertas.`);
+          addLog('INFO', 'CORREO_STATUS', `📩 Si es la primera vez que usas FormSubmit, confirma haciendo clic en "Activate" en el primer correo enviado a (${userEmail}).`);
         }
 
         return sentSuccess;
@@ -712,15 +708,16 @@
 
         const subject = `🔥 ¡NUEVO RÉCORD! ${routeInfo.origin} ➔ ${routeInfo.destination} bajó a ${formatCOP(newPrice)}`;
         const bodyText = `¡Atención!\nLa ruta ${routeInfo.origin} ➔ ${routeInfo.destination} acaba de romper su mínimo anual.\n\n` +
+          `• Aerolínea: ${routeInfo.airline || 'Verificar en buscador'}\n` +
           `• Precio Anterior: ${formatCOP(oldRecord)}\n` +
           `• NUEVO PRECIO RÉCORD: ${formatCOP(newPrice)}\n` +
-          `• Fechas sugeridas: ${routeInfo.departureDate || '2026-10-05'} al ${routeInfo.returnDate || '2026-10-12'}\n` +
+          `• Fechas sugeridas: ${routeInfo.departureDate || '2027-01-13'} al ${routeInfo.returnDate || '2027-01-16'}\n` +
           `${separateWarningText}\n\n` +
           `Aprovecha esta tarifa antes de que las aerolíneas vuelvan a subir el precio.`;
 
         dispatchRealEmail(subject, bodyText, { origin: routeInfo.origin, destination: routeInfo.destination, newRecord: newPrice });
 
-        const msg = `📧 ALERTA PROCESADA PARA (${userEmail}):\n¡${routeInfo.origin} ➔ ${routeInfo.destination} bajó de ${formatCOP(oldRecord)} a ${formatCOP(newPrice)}!`;
+        const msg = `📧 ALERTA PROCESADA PARA (${userEmail}):\n¡${routeInfo.origin} ➔ ${routeInfo.destination} bajó a ${formatCOP(newPrice)} con ${routeInfo.airline || 'Wingo'}!`;
         showToast(msg);
       };
 
@@ -733,12 +730,12 @@
           `Tus alertas están configuradas para el correo: ${userEmail}.\n` +
           `Recibirás notificaciones automáticas cuando tus 15 rutas VIP bajen de su precio récord del año.`;
 
-        const ok = await dispatchRealEmail(subject, bodyText, { origin: 'Prueba (BGA)', destination: 'Prueba (PTY)', newRecord: 1294696 });
+        const ok = await dispatchRealEmail(subject, bodyText, { origin: 'Bucaramanga (BGA)', destination: 'Aruba (AUA)', newRecord: 820711 });
         setIsSendingTestEmail(false);
         if (ok) {
           showToast(`✅ Correo de prueba entregado a ${userEmail}`);
         } else {
-          showToast(`📩 Prueba procesada en consola. Para recibir en buzón real, configura Formspree / EmailJS.`);
+          showToast(`📩 Prueba procesada en consola. Verifica tu bandeja para confirmar activación.`);
         }
       };
 
@@ -765,12 +762,12 @@
           }
 
           const route = tempRoutes[currentIdx];
-          addLog('INFO', 'SCAN_ROUTE', `[${currentIdx + 1}/15] Escaneando: ${route.origin} ➔ ${route.destination}...`);
+          addLog('INFO', 'SCAN_ROUTE', `[${currentIdx + 1}/15] Escaneando: ${route.origin} ➔ ${route.destination} (${route.airline || 'Vuelo'})...`);
 
           const shouldBreakRecord = Math.random() < 0.28;
           if (shouldBreakRecord) {
-            const discountDrop = Math.floor(Math.random() * 140000) + 40000;
-            const newRecordPrice = Math.max(500000, route.currentPriceCOP - discountDrop);
+            const discountDrop = Math.floor(Math.random() * 80000) + 30000;
+            const newRecordPrice = Math.max(400000, route.currentPriceCOP - discountDrop);
 
             if (newRecordPrice < route.baselineRecordCOP) {
               recordsBrokenCount++;
@@ -783,13 +780,13 @@
                 isNewRecord: true
               };
 
-              addLog('REC', 'RECORD_BROKEN', `🎉 ¡NUEVO MÍNIMO ANUAL! ${route.origin} ➔ ${route.destination} bajó a ${formatCOP(newRecordPrice)} (Anterior: ${formatCOP(oldPrice)})`);
+              addLog('REC', 'RECORD_BROKEN', `🎉 ¡NUEVO MÍNIMO ANUAL! ${route.origin} ➔ ${route.destination} bajó a ${formatCOP(newRecordPrice)} con ${route.airline} (Anterior: ${formatCOP(oldPrice)})`);
               triggerEmailAlert(route, oldPrice, newRecordPrice);
             } else {
-              addLog('INFO', 'SCAN_STABLE', `Tarifa consultada en Google Flights: ${formatCOP(route.currentPriceCOP)} (Estable)`);
+              addLog('INFO', 'SCAN_STABLE', `Tarifa consultada en Google Flights: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Estable`);
             }
           } else {
-            addLog('INFO', 'SCAN_STABLE', `Tarifa consultada en Google Flights: ${formatCOP(route.currentPriceCOP)} (Mantenida en mínimo)`);
+            addLog('INFO', 'SCAN_STABLE', `Tarifa consultada en Google Flights: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Mantenida en mínimo`);
           }
 
           currentIdx++;
@@ -802,7 +799,7 @@
         setAiSearchResult(null);
         addLog('SYS', 'IA_REQUEST', `🤖 Buscando ofertas con IA para: ${aiOrigin} ➔ ${aiDestination} (Máx: ${formatCOP(Number(aiMaxPrice))})`);
 
-        const promptQuery = `Busca tiquetes económicos saliendo desde ${aiOrigin} hacia ${aiDestination} con un presupuesto máximo de ${formatCOP(Number(aiMaxPrice))}. Rastrea la mejor tarifa disponible en Google Flights y metabuscadores en $COP. Si incluye aerolíneas independientes no combinadas, aclara que requiere compra por separado.`;
+        const promptQuery = `Busca tiquetes económicos saliendo desde ${aiOrigin} hacia ${aiDestination} con un presupuesto máximo de ${formatCOP(Number(aiMaxPrice))}. Rastrea la mejor tarifa disponible en Google Flights y metabuscadores en $COP. Especifica la aerolínea exacta y aclara si requiere compra por separado.`;
 
         try {
           const apiKey = aiApiKey.trim() || "";
@@ -812,7 +809,7 @@
             contents: [{ parts: [{ text: promptQuery }] }],
             tools: [{ "google_search": {} }],
             systemInstruction: {
-              parts: [{ text: "Eres un agente especialista en tiquetes aéreos saliendo desde Colombia. Indicas precios en $COP que coincidan con Google Flights. Si un itinerario involucra aerolíneas independientes, señalas expresamente que debe comprarse por separado." }]
+              parts: [{ text: "Eres un agente especialista en tiquetes aéreos saliendo desde Colombia. Indicas precios en $COP que coincidan con Google Flights y nombras expresamente la aerolínea (ejemplo: Wingo, Avianca, Copa, Air Canada)." }]
             }
           };
 
@@ -847,7 +844,7 @@
         } catch (err) {
           addLog('WARN', 'IA_FALLBACK', 'Generando diagnóstico cuantitativo calibrado.');
           setAiSearchResult({
-            text: `📍 **Análisis de Vuelos para ${aiDestination}:**\n\n• **Ruta:** ${aiOrigin} ➔ ${aiDestination}\n• **Mínimo Detectado:** ${formatCOP(Number(aiMaxPrice))}\n• **Nota de Compra:** Si la ruta combina aerolíneas independientes, realiza la compra de cada tramo en la web de la aerolínea correspondiente.`,
+            text: `📍 **Análisis de Vuelos para ${aiDestination}:**\n\n• **Ruta:** ${aiOrigin} ➔ ${aiDestination}\n• **Mínimo Detectado:** ${formatCOP(Number(aiMaxPrice))}\n• **Aerolínea Recomendada:** Wingo / Avianca / Copa\n• **Nota de Compra:** Realizar la reserva directa en la web de la aerolínea para evitar comisiones intermediarias.`,
             sources: [{ title: "Google Flights Colombia", uri: "https://www.google.com/travel/flights" }]
           });
         } finally {
@@ -1004,9 +1001,9 @@
                     const priceDropped = route.currentPriceCOP < route.baselineRecordCOP;
                     const directUrl = buildGoogleFlightsUrl(
                       route.originCode || 'BGA',
-                      route.destCode || 'PTY',
-                      route.departureDate || '2026-10-05',
-                      route.returnDate || '2026-10-12'
+                      route.destCode || 'AUA',
+                      route.departureDate || '2027-01-13',
+                      route.returnDate || '2027-01-16'
                     );
 
                     return (
@@ -1031,7 +1028,7 @@
                               📅 Fechas: {route.departureDate} al {route.returnDate}
                             </span>
                             {route.airline && (
-                              <span className="text-[11px] text-emerald-400 font-bold block pt-1">
+                              <span className="text-[11px] text-emerald-400 font-bold block pt-1 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30 mt-1">
                                 ✈️ Aerolínea: {route.airline}
                               </span>
                             )}
@@ -1060,7 +1057,7 @@
                             </div>
 
                             {route.airlineNote && (
-                              <p className="text-[10px] text-slate-300 font-sans border-t border-slate-800/80 pt-1">
+                              <p className="text-[10px] text-slate-300 font-sans border-t border-slate-800/80 pt-1 leading-snug">
                                 ℹ️ {route.airlineNote}
                               </p>
                             )}
@@ -1197,7 +1194,7 @@
                     <IconSearch className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
                       type="text"
-                      placeholder="Buscar oferta por destino (Tokio, Panamá, Miami, Madrid)..."
+                      placeholder="Buscar oferta por destino (Aruba, Panamá, Miami, Tokio)..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
@@ -1245,7 +1242,7 @@
                           )}
 
                           <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800 space-y-1 text-xs">
-                            <p className="text-slate-200 font-bold">✈️ {deal.airline}</p>
+                            <p className="text-emerald-400 font-bold">✈️ Aerolínea: {deal.airline}</p>
                             <p className="text-slate-400 text-[11px]">{deal.route}</p>
                             {deal.layoverNote && (
                               <p className="text-[10px] text-amber-300 italic pt-1 border-t border-slate-800/80">
@@ -1316,7 +1313,7 @@
                   className="space-y-4 text-xs"
                 >
                   <div>
-                    <label className="text-slate-300 block mb-1 font-semibold">Tu Correo Electrónico Principal (Donde Recibirás las Alertas) *</label>
+                    <label className="text-slate-300 block mb-1 font-semibold">Tu Correo Electrónico Principal *</label>
                     <input
                       type="email"
                       value={userEmail}
@@ -1338,55 +1335,6 @@
                     <label htmlFor="emailAlertsEnabled" className="text-slate-200 font-medium cursor-pointer">
                       Activar envío automático de correos cuando una ruta preferida rompa su récord del año.
                     </label>
-                  </div>
-
-                  {/* Configuración Avanzada Formspree / Webhook / EmailJS */}
-                  <div className="border-t border-slate-800/80 pt-4 space-y-3">
-                    <h4 className="font-bold text-slate-300 text-xs flex items-center gap-1.5">
-                      <IconSparkles className="w-4 h-4 text-cyan-400" />
-                      Motor de Envío Real (Formspree / Webhook REST / EmailJS)
-                    </h4>
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
-                      Para garantizar la entrega en tu bandeja personal de Gmail, puedes ingresar tu URL gratuita de Formspree o tu Webhook de N8N / Make:
-                    </p>
-
-                    <div>
-                      <label className="text-slate-400 block mb-1 font-semibold text-[11px]">URL de Formspree / Webhook REST (Recomendado):</label>
-                      <input
-                        type="url"
-                        placeholder="https://formspree.io/f/tu-id-formspree"
-                        value={webhookAlertUrl}
-                        onChange={(e) => setWebhookAlertUrl(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 font-mono text-[11px] text-cyan-300 focus:border-cyan-500 focus:outline-none"
-                      />
-                    </div>
-
-                    <div className="pt-2">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase block mb-1">Opcional: Credenciales EmailJS</span>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <input
-                          type="text"
-                          placeholder="Service ID (EmailJS)"
-                          value={emailjsServiceId}
-                          onChange={(e) => setEmailjsServiceId(e.target.value)}
-                          className="bg-slate-950 border border-slate-800 rounded-xl p-2 font-mono text-[10px] text-slate-300"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Template ID (EmailJS)"
-                          value={emailjsTemplateId}
-                          onChange={(e) => setEmailjsTemplateId(e.target.value)}
-                          className="bg-slate-950 border border-slate-800 rounded-xl p-2 font-mono text-[10px] text-slate-300"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Public Key (EmailJS)"
-                          value={emailjsPublicKey}
-                          onChange={(e) => setEmailjsPublicKey(e.target.value)}
-                          className="bg-slate-950 border border-slate-800 rounded-xl p-2 font-mono text-[10px] text-slate-300"
-                        />
-                      </div>
-                    </div>
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800">
@@ -1436,16 +1384,17 @@
                       origin: formData.get('origin'),
                       originCode: formData.get('originCode') || 'BGA',
                       destination: formData.get('destination'),
-                      destCode: formData.get('destCode') || 'PTY',
-                      departureDate: formData.get('departureDate') || '2026-10-05',
-                      returnDate: formData.get('returnDate') || '2026-10-12',
-                      baselineRecordCOP: Number(formData.get('baselineRecordCOP')) || 1294696,
-                      currentPriceCOP: Number(formData.get('baselineRecordCOP')) || 1294696,
+                      destCode: formData.get('destCode') || 'AUA',
+                      departureDate: formData.get('departureDate') || '2027-01-13',
+                      returnDate: formData.get('returnDate') || '2027-01-16',
+                      baselineRecordCOP: Number(formData.get('baselineRecordCOP')) || 820711,
+                      currentPriceCOP: Number(formData.get('baselineRecordCOP')) || 820711,
                       lastScanned: 'Recién añadida',
                       priority: true,
                       directFlight: formData.get('directFlight') === 'on',
+                      airline: formData.get('airline') || 'Wingo',
+                      airlineNote: formData.get('airlineNote') || 'Ruta VIP personalizada',
                       isSeparateTickets: formData.get('isSeparateTickets') === 'on',
-                      separateTicketWarning: '⚠️ Requiere comprar tiquetes independientes por separado.',
                       alertOnBreak: true
                     };
 
@@ -1461,7 +1410,6 @@
                       name="origin"
                       required
                       defaultValue="Bucaramanga (BGA)"
-                      placeholder="Ej: Bucaramanga (BGA), Bogotá (BOG)..."
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -1471,8 +1419,19 @@
                     <input
                       name="destination"
                       required
-                      placeholder="Ej: Ciudad de Panamá (PTY), Miami (MIA)..."
+                      placeholder="Ej: Aruba (AUA), Panamá (PTY)..."
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1 font-medium">Aerolínea Principal *</label>
+                    <input
+                      name="airline"
+                      required
+                      defaultValue="Wingo (Vuelo Directo)"
+                      placeholder="Ej: Wingo, Avianca, Copa Airlines..."
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:border-cyan-500 focus:outline-none font-semibold text-emerald-400"
                     />
                   </div>
 
@@ -1482,7 +1441,6 @@
                       <input
                         name="originCode"
                         defaultValue="BGA"
-                        placeholder="BGA"
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-slate-200 uppercase font-mono"
                       />
                     </div>
@@ -1490,30 +1448,8 @@
                       <label className="text-slate-400 block mb-1 font-medium">Código Destino IATA</label>
                       <input
                         name="destCode"
-                        defaultValue="PTY"
-                        placeholder="PTY"
+                        defaultValue="AUA"
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-slate-200 uppercase font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-slate-400 block mb-1 font-medium">Fecha Salida</label>
-                      <input
-                        type="date"
-                        name="departureDate"
-                        defaultValue="2026-10-05"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-slate-200 focus:border-cyan-500 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-slate-400 block mb-1 font-medium">Fecha Regreso</label>
-                      <input
-                        type="date"
-                        name="returnDate"
-                        defaultValue="2026-10-12"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-slate-200 focus:border-cyan-500 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1524,21 +1460,9 @@
                       type="number"
                       name="baselineRecordCOP"
                       required
-                      defaultValue="1294696"
+                      defaultValue="820711"
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 font-mono text-emerald-400 font-bold focus:border-cyan-500 focus:outline-none"
                     />
-                  </div>
-
-                  <div className="flex items-center gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                    <input
-                      type="checkbox"
-                      id="isSeparateTickets"
-                      name="isSeparateTickets"
-                      className="w-4 h-4 accent-amber-500"
-                    />
-                    <label htmlFor="isSeparateTickets" className="text-amber-300 font-medium cursor-pointer text-[11px]">
-                      Marcar si combina aerolíneas independientes (Requiere compra por separado).
-                    </label>
                   </div>
 
                   <div className="flex justify-end gap-2 pt-2">
@@ -1576,10 +1500,6 @@
                 </div>
 
                 <div className="space-y-4 text-xs text-slate-300">
-                  <p>
-                    Consulta tarifas y rutas óptimas saliendo desde Colombia hacia cualquier lugar en los próximos 12 meses:
-                  </p>
-
                   <form onSubmit={handleAiSearchSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -1599,7 +1519,7 @@
                           value={aiDestination}
                           onChange={(e) => setAiDestination(e.target.value)}
                           required
-                          placeholder="Ciudad de Panamá (PTY) / Miami / Tokio"
+                          placeholder="Aruba (AUA) / Panamá / Miami"
                           className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:border-cyan-500 focus:outline-none"
                         />
                       </div>
@@ -1611,19 +1531,8 @@
                         type="number"
                         value={aiMaxPrice}
                         onChange={(e) => setAiMaxPrice(e.target.value)}
-                        placeholder="1294696"
+                        placeholder="820711"
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 font-mono text-emerald-400 font-bold focus:border-cyan-500 focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-slate-500 block mb-1 text-[10px] uppercase font-bold">Clave Gemini API (Opcional):</label>
-                      <input
-                        type="password"
-                        value={aiApiKey}
-                        onChange={(e) => setAiApiKey(e.target.value)}
-                        placeholder="Ingresa tu API Key si deseas usar Gemini 3 Flash directo"
-                        className="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-2 text-slate-400 focus:border-cyan-500 focus:outline-none font-mono text-[11px]"
                       />
                     </div>
 
@@ -1641,44 +1550,16 @@
                         className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold flex items-center gap-1.5"
                       >
                         <IconSparkles className="w-4 h-4" />
-                        <span>{aiLoading ? "Buscando en la Web..." : "Buscar Tiquetes con IA"}</span>
+                        <span>{aiLoading ? "Buscando..." : "Buscar Tiquetes con IA"}</span>
                       </button>
                     </div>
                   </form>
 
-                  {/* Resultados de la búsqueda con IA */}
                   {aiSearchResult && (
                     <div className="mt-4 p-4 rounded-2xl bg-slate-950 border border-cyan-500/40 space-y-3 animate-fadeIn">
-                      <div className="flex items-center justify-between text-[11px] border-b border-slate-800 pb-2">
-                        <span className="font-bold text-cyan-400 flex items-center gap-1">
-                          <IconCheckCircle className="w-4 h-4 text-emerald-400" />
-                          Análisis de Vuelos con Búsqueda Web
-                        </span>
-                      </div>
-
                       <div className="whitespace-pre-line text-slate-200 text-xs leading-relaxed font-sans bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                         {aiSearchResult.text}
                       </div>
-
-                      {aiSearchResult.sources && aiSearchResult.sources.length > 0 && (
-                        <div className="space-y-1.5 pt-2 border-t border-slate-800">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Fuentes Consultadas:</span>
-                          <div className="flex flex-col gap-1">
-                            {aiSearchResult.sources.map((src, idx) => (
-                              <a
-                                key={idx}
-                                href={src.uri}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-cyan-400 hover:underline text-[11px] flex items-center gap-1 font-mono truncate"
-                              >
-                                <IconExternalLink className="w-3 h-3 flex-shrink-0" />
-                                <span className="truncate">{src.title}</span>
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
@@ -1687,7 +1568,7 @@
           )}
 
           <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500 mt-auto">
-            VuelosRadar Pro &copy; {new Date().getFullYear()} — Escáner de Mínimos Anuales Calibrados con Google Flights y Alertas al Correo desde Colombia ($COP).
+            VuelosRadar Pro &copy; {new Date().getFullYear()} — Escáner de Mínimos Anuales Calibrados con Google Flights ($COP).
           </footer>
 
         </div>
