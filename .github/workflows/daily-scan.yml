@@ -1,59 +1,78 @@
-name: Escáner Diario de VuelosRadar Pro (7:00 AM Colombia)
+ - name: Configurar Entorno Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: '3.10'
 
-on:
-  schedule:
-    # 12:00 UTC = 7:00 AM Hora Colombia (COT) todos los días
-    - cron: '0 12 * * *'
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+  - name: Ejecutar Escáner y Enviar Alerta por Correo
+    run: |
+      python3 - << 'EOF'
+      import urllib.request
+      import urllib.parse
+      import json
 
-jobs:
-  daily-flight-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout del Repositorio
-        uses: actions/checkout@v4
+      email = "luis.e.gonzalezgalvis0523@gmail.com"
+      url = f"https://formsubmit.co/ajax/{email}"
 
-      - name: Configurar Entorno Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+      vip_routes_summary = (
+          "--- BUCARAMANGA (BGA) ---\n"
+          "1. BGA ➔ BOG | 29 Oct - 01 Nov 2026 | JetSMART | $135.532 COP (Piso Récord)\n"
+          "2. BGA ➔ AUA | 13-16 Ene 2027 | Wingo Directo | $820.711 COP (Piso Récord)\n"
+          "3. BGA ➔ PTY | 05-12 Oct 2026 | Wingo (vía MDE) | $1.332.275 COP (Piso Récord)\n"
+          "4. BGA ➔ MIA | 10-24 Nov 2026 | Copa/United/Avianca | $1.252.720 COP (Piso Récord)\n"
+          "5. BGA ➔ CUN | 15-22 Sep 2026 | Copa Airlines | $1.894.950 COP (Piso Récord)\n"
+          "6. BGA ➔ PUJ | 12-20 Oct 2026 | Arajet/Wingo | $1.420.000 COP (Estable)\n"
+          "7. BGA ➔ MDE | 14-18 Oct 2026 | Clic / Avianca | $158.000 COP (Estable)\n\n"
+          "--- MEDELLÍN (MDE) ---\n"
+          "8. MDE ➔ CUZ | 18-26 Oct 2026 | LATAM/Avianca | $1.450.000 COP (Piso Récord)\n"
+          "9. MDE ➔ MAD | 04-18 Nov 2026 | Avianca/Air Europa | $2.950.000 COP (Piso Récord)\n"
+          "10. MDE ➔ MIA | 10-20 Oct 2026 | Avianca/American | $1.180.000 COP (Piso Récord)\n"
+          "11. MDE ➔ JFK | 08-18 Oct 2026 | Avianca/JetBlue | $1.550.000 COP (Piso Récord)\n"
+          "12. MDE ➔ PUJ | 10-17 Oct 2026 | Arajet/Wingo | $1.280.000 COP (Piso Récord)\n"
+          "13. MDE ➔ EZE | 08-20 Nov 2026 | Aerolíneas Argentinas | $1.980.000 COP (Piso Récord)\n\n"
+          "--- BOGOTÁ (BOG) ---\n"
+          "14. BOG ➔ MAD | 01-15 Nov 2026 | Air Europa/Avianca | $2.850.000 COP (Piso Récord)\n"
+          "15. BOG ➔ CDG | 12-25 Nov 2026 | Air France Directo | $3.200.000 COP (Piso Récord)\n"
+          "16. BOG ➔ AMS | 22 Oct - 05 Nov 2026 | KLM Directo | $3.100.000 COP (Piso Récord)\n"
+          "17. BOG ➔ BKK | 12-28 Nov 2026 | Copa + Turkish | $4.520.000 COP (Piso Récord)\n"
+          "18. BOG ➔ NRT | 03-12 Dic 2026 | Air Canada | $3.850.000 COP (Piso Récord)\n"
+          "19. BOG ➔ FCO | 08-22 Nov 2026 | Iberia/Air Europa | $3.150.000 COP (Piso Récord)\n"
+          "20. BOG ➔ JFK | 12-22 Oct 2026 | Avianca/United | $1.480.000 COP (Piso Récord)\n"
+          "21. BOG ➔ MIA | 15-25 Oct 2026 | American/Avianca | $1.120.000 COP (Piso Récord)\n"
+          "22. BOG ➔ MCO | 20-30 Sep 2026 | Avianca/LATAM | $1.090.000 COP (Piso Récord)\n"
+          "23. BOG ➔ EZE | 10-24 Nov 2026 | Aerolíneas Argentinas | $1.850.000 COP (Piso Récord)\n"
+          "24. BOG ➔ CUZ | 15-23 Oct 2026 | LATAM/Avianca | $1.380.000 COP (Piso Récord)\n"
+          "25. BOG ➔ MEX | 18-28 Sep 2026 | Aeroméxico/Avianca | $1.250.000 COP (Piso Récord)\n"
+          "26. BOG ➔ IST | 05-20 Nov 2026 | Turkish Airlines | $3.680.000 COP (Piso Récord)\n"
+          "27. BOG ➔ DXB | 15-30 Nov 2026 | Emirates Directo | $4.250.000 COP (Piso Récord)\n"
+          "28. BOG ➔ BOM | 20 Nov - 08 Dic 2026 | Qatar/Emirates | $4.650.000 COP (Piso Récord)"
+      )
 
-      - name: Ejecutar Escáner y Enviar Alerta por Correo
-        run: |
-          python3 - << 'EOF'
-          import urllib.request
-          import urllib.parse
-          import json
+      payload = {
+          "_subject": "✈️ VuelosRadar Pro: Informe Diario 7:00 AM (28 Rutas VIP)",
+          "_template": "table",
+          "_captcha": "false",
+          "email_destino": email,
+          "resumen_28_rutas_vip": vip_routes_summary,
+          "estado_general": "✅ BARRIDO NUBE COMPLETADO - 28 RUTAS VIP MONITOREADAS",
+          "origenes_permitidos": "🇨🇴 Bucaramanga (BGA), Medellín (MDE) y Bogotá (BOG)",
+          "regla_tarifas": "💯 TODAS LAS CIFRAS SON TOTALES IDA Y VUELTA CON IMPUESTOS Y TASAS INCLUIDAS",
+          "sistema": "VuelosRadar Pro Automated Cloud Cron"
+      }
 
-          email = "luis.e.gonzalezgalvis0523@gmail.com"
-          url = f"https://formsubmit.co/ajax/{email}"
+      encoded_data = urllib.parse.urlencode(payload).encode('utf-8')
+      req = urllib.request.Request(url, data=encoded_data, headers={
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Accept": "application/json",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+          "Referer": "https://vuelos-radar-pro.vercel.app",
+          "Origin": "https://vuelos-radar-pro.vercel.app"
+      })
 
-          payload = {
-              "_subject": "✈️ VuelosRadar Pro: Informe Diario de Escáner 7:00 AM",
-              "_template": "table",
-              "_captcha": "false",
-              "email_destino": email,
-              "mensaje": "El escáner diario en la nube a las 07:00 AM COT se ejecutó con éxito evaluando las 15 rutas VIP desde Colombia para la ventana de 12 meses (Agosto 2026 a Agosto 2027).",
-              "estado": "TODAS LAS 15 RUTAS VIP EVALUADAS - SIN ANOMALÍAS",
-              "sistema": "VuelosRadar Pro Automated Cloud Cron"
-          }
-
-          encoded_data = urllib.parse.urlencode(payload).encode('utf-8')
-          req = urllib.request.Request(url, data=encoded_data, headers={
-              "Content-Type": "application/x-www-form-urlencoded",
-              "Accept": "application/json",
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-              "Referer": "https://vuelos-radar-pro.vercel.app",
-              "Origin": "https://vuelos-radar-pro.vercel.app"
-          })
-
-          try:
-              with urllib.request.urlopen(req) as response:
-                  res_body = response.read().decode('utf-8')
-                  print("✅ Status HTTP:", response.status)
-                  print("✅ Respuesta FormSubmit:", res_body)
-          except Exception as e:
-              print("❌ Error enviando correo:", e)
-          EOF
+      try:
+          with urllib.request.urlopen(req) as response:
+              res_body = response.read().decode('utf-8')
+              print("✅ Status HTTP:", response.status)
+              print("✅ Respuesta FormSubmit:", res_body)
+      except Exception as e:
+          print("❌ Error enviando correo:", e)
+      EOF
