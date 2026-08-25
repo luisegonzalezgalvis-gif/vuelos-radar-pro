@@ -80,13 +80,18 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
-    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v16_storage";
+    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v20_storage";
 
     function buildGoogleFlightsUrl(originCode, destCode, departureDateStr, returnDateStr) {
       if (departureDateStr && returnDateStr) {
         return `https://www.google.com/travel/flights?q=Flights+from+${originCode}+to+${destCode}+on+${departureDateStr}+through+${returnDateStr}`;
       }
       return `https://www.google.com/travel/flights?q=flights+from+${originCode}+to+${destCode}`;
+    }
+
+    function formatCOP(amount) {
+      const num = Number(amount) || 0;
+      return `$${Math.round(num).toLocaleString('es-CO')} COP`;
     }
 
     // Iconos SVG
@@ -204,7 +209,7 @@
         airline: 'Wingo (vía MDE) / Avianca / Copa',
         airlineNote: 'Wingo con escala en Medellín (MDE) desde $1.332.275 COP. Avianca (1 escala BOG): $1.591.480 COP. Copa Directo: $2.257.270 COP',
         isSeparateTickets: true,
-        separateTicketWarning: '⚠️ COMPRA POR SEPARADO EN WINGO: Wingo no vende BGA-PTY en un solo pasaje. Para los $1.332.275 COP debes comprar 2 tiquetes en Wingo: 1) BGA ➔ MDE y 2) MDE ➔ PTY. Si prefieres un solo pasaje sin cambiar maletas, elige Avianca ($1.59M) o Copa ($2.25M).',
+        separateTicketWarning: '⚠️ COMPRA POR SEPARADO EN WINGO: Para los $1.332.275 COP debes comprar 2 tiquetes en Wingo: 1) BGA ➔ MDE y 2) MDE ➔ PTY.',
         alertOnBreak: true,
         promoSource: 'Wingo (Oficial)',
         promoUrl: 'https://www.wingo.com/',
@@ -663,7 +668,7 @@
       const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
 
       const [logs, setLogs] = useState([
-        { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro Engine v16.0 (Asistente Escalas IA) iniciado.' },
+        { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro Engine v20.0 (Sincronizado) iniciado.' },
         { id: 2, time: new Date().toLocaleTimeString(), type: 'INFO', tag: 'RADAR', msg: '📡 Monitoreando 15 rutas VIP con precios verídicos en $COP.' },
         { id: 3, time: new Date().toLocaleTimeString(), type: 'OK', tag: 'CORREO', msg: `📧 Canal de alertas listo para envío directo ➔ ${userEmail}` }
       ]);
@@ -689,7 +694,7 @@
         }
       });
 
-      const [selectedRouteHistoryId, setSelectedRouteHistoryId] = useState('vip-5'); // Por defecto Bogotá - Tokio
+      const [selectedRouteHistoryId, setSelectedRouteHistoryId] = useState('vip-5');
       const [deals, setDeals] = useState(INITIAL_LIVE_DEALS);
       const [activeTab, setActiveTab] = useState('vip');
       const [searchQuery, setSearchQuery] = useState('');
@@ -697,14 +702,14 @@
       const [toastMsg, setToastMsg] = useState('');
 
       const [showAddVipModal, setShowAddVipModal] = useState(false);
-      const [showAiModal, setShowAiModal] = useState(false);
       const [isScanningLive, setIsScanningLive] = useState(false);
+      const isScanningRef = useRef(false);
       const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
 
-      // Estado para el Asistente IA de Escalas & Hubs
+      // Estado para Asistente IA de Escalas
       const [routeOrigin, setRouteOrigin] = useState('Bucaramanga (BGA)');
       const [routeDest, setRouteDestination] = useState('Tokio, Japón');
-      const [routeVisaStatus, setRouteVisaStatus] = useState('con_visa_usa'); // 'con_visa_usa', 'sin_visa_usa'
+      const [routeVisaStatus, setRouteVisaStatus] = useState('con_visa_usa');
       const [routeLoading, setRouteLoading] = useState(false);
       const [routeAnalysisResult, setRouteAnalysisResult] = useState(null);
 
@@ -723,66 +728,79 @@
         setTimeout(() => setToastMsg(''), 4500);
       };
 
+      // Chart.js renderizado seguro en tab 'records'
       useEffect(() => {
         if (activeTab === 'records') {
-          // Usamos requestAnimationFrame para garantizar que el DOM <canvas> esté montado antes de renderizar Chart.js
           const timer = setTimeout(() => {
-            if (!chartRef.current) return;
+            try {
+              if (!chartRef.current) return;
 
-            if (chartInstanceRef.current) {
-              chartInstanceRef.current.destroy();
-            }
+              if (chartInstanceRef.current) {
+                chartInstanceRef.current.destroy();
+                chartInstanceRef.current = null;
+              }
 
-            const targetRoute = priorityRoutes.find(r => r.id === selectedRouteHistoryId) || priorityRoutes[0];
-            const historyData = targetRoute.history || [targetRoute.currentPriceCOP * 1.4, targetRoute.currentPriceCOP * 1.3, targetRoute.currentPriceCOP * 1.2, targetRoute.currentPriceCOP * 1.1, targetRoute.currentPriceCOP, targetRoute.currentPriceCOP * 1.5, targetRoute.currentPriceCOP * 1.6, targetRoute.currentPriceCOP * 1.3, targetRoute.currentPriceCOP, targetRoute.baselineRecordCOP, targetRoute.currentPriceCOP * 1.1, targetRoute.currentPriceCOP * 1.5];
+              const targetRoute = priorityRoutes.find(r => r.id === selectedRouteHistoryId) || priorityRoutes[0];
+              if (!targetRoute) return;
 
-            const ctx = chartRef.current.getContext('2d');
-            chartInstanceRef.current = new Chart(ctx, {
-              type: 'line',
-              data: {
-                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct (Baja)', 'Nov', 'Dic (Alta)'],
-                datasets: [
-                  {
-                    label: `Histórico de Precio: ${targetRoute.origin} ➔ ${targetRoute.destination}`,
-                    data: historyData,
-                    borderColor: '#06b6d4',
-                    backgroundColor: 'rgba(6, 182, 212, 0.12)',
-                    fill: true,
-                    tension: 0.35,
-                    borderWidth: 3,
-                    pointBackgroundColor: '#10b981',
-                    pointRadius: 5
-                  }
-                ]
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { position: 'top', labels: { color: '#f3f4f6', font: { family: 'Inter', size: 12, weight: 'bold' } } },
-                  tooltip: {
-                    callbacks: {
-                      label: function(context) {
-                        return ` Tarifa: $${Math.round(context.raw).toLocaleString('es-CO')} COP`;
+              const historyData = targetRoute.history || [220000, 195000, 180000, 165000, 150000, 240000, 260000, 210000, 135532, 135532, 155000, 230000];
+
+              const ctx = chartRef.current.getContext('2d');
+              chartInstanceRef.current = new Chart(ctx, {
+                type: 'line',
+                data: {
+                  labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct (Baja)', 'Nov', 'Dic (Alta)'],
+                  datasets: [
+                    {
+                      label: `Histórico de Precio: ${targetRoute.origin || ''} ➔ ${targetRoute.destination || ''}`,
+                      data: historyData,
+                      borderColor: '#06b6d4',
+                      backgroundColor: 'rgba(6, 182, 212, 0.12)',
+                      fill: true,
+                      tension: 0.35,
+                      borderWidth: 3,
+                      pointBackgroundColor: '#10b981',
+                      pointRadius: 5
+                    }
+                  ]
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { position: 'top', labels: { color: '#f3f4f6', font: { family: 'Inter', size: 12, weight: 'bold' } } },
+                    tooltip: {
+                      callbacks: {
+                        label: function(context) {
+                          return ` Tarifa: $${Math.round(context.raw).toLocaleString('es-CO')} COP`;
+                        }
                       }
                     }
-                  }
-                },
-                scales: {
-                  x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
-                  y: { 
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' }, 
-                    ticks: { 
-                      color: '#94a3b8',
-                      callback: (v) => `$${(v / 1000000).toFixed(1)}M COP` 
-                    } 
+                  },
+                  scales: {
+                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+                    y: { 
+                      grid: { color: 'rgba(255, 255, 255, 0.05)' }, 
+                      ticks: { 
+                        color: '#94a3b8',
+                        callback: (v) => `$${(v / 1000000).toFixed(1)}M COP` 
+                      } 
+                    }
                   }
                 }
-              }
-            });
-          }, 60);
+              });
+            } catch (err) {
+              console.error("Error cargando gráfica:", err);
+            }
+          }, 100);
 
-          return () => clearTimeout(timer);
+          return () => {
+            clearTimeout(timer);
+            if (chartInstanceRef.current) {
+              chartInstanceRef.current.destroy();
+              chartInstanceRef.current = null;
+            }
+          };
         }
       }, [activeTab, selectedRouteHistoryId, priorityRoutes]);
 
@@ -865,18 +883,20 @@
       };
 
       const handleRunScanner = () => {
-        if (isScanningLive) return;
+        if (isScanningRef.current || isScanningLive) return;
+        isScanningRef.current = true;
         setIsScanningLive(true);
         setActiveTab('console');
-        addLog('SYS', 'SCAN_START', '🔍 Iniciando barrido completo en vivo en las páginas oficiales de aerolíneas...');
+        addLog('SYS', 'SCAN_START', '🔍 Iniciando barrido completo de 15 rutas VIP...');
 
         let currentIdx = 0;
         let recordsBrokenCount = 0;
-        const tempRoutes = [...priorityRoutes];
+        const tempRoutes = JSON.parse(JSON.stringify(priorityRoutes));
 
         const interval = setInterval(() => {
           if (currentIdx >= tempRoutes.length) {
             clearInterval(interval);
+            isScanningRef.current = false;
             setIsScanningLive(false);
             setPriorityRoutes([...tempRoutes]);
             addLog('OK', 'SCAN_COMPLETE', `✅ Escaneo finalizado. Rutas procesadas: ${tempRoutes.length}. Récords rotos: ${recordsBrokenCount}.`);
@@ -897,25 +917,22 @@
             if (newRecordPrice < route.baselineRecordCOP) {
               recordsBrokenCount++;
               const oldPrice = route.baselineRecordCOP;
-              tempRoutes[currentIdx] = {
-                ...route,
-                baselineRecordCOP: newRecordPrice,
-                currentPriceCOP: newRecordPrice,
-                lastScanned: 'Recién detectado',
-                isNewRecord: true
-              };
+              tempRoutes[currentIdx].baselineRecordCOP = newRecordPrice;
+              tempRoutes[currentIdx].currentPriceCOP = newRecordPrice;
+              tempRoutes[currentIdx].lastScanned = 'Recién detectado';
+              tempRoutes[currentIdx].isNewRecord = true;
 
               addLog('REC', 'RECORD_BROKEN', `🎉 ¡NUEVO MÍNIMO ANUAL! ${route.origin} ➔ ${route.destination} bajó a ${formatCOP(newRecordPrice)} con ${route.airline}`);
               triggerEmailAlert(route, oldPrice, newRecordPrice);
             } else {
-              addLog('INFO', 'SCAN_STABLE', `Tarifa consultada en aerolínea oficial: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Estable`);
+              addLog('INFO', 'SCAN_STABLE', `Tarifa consultada: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Mantenida`);
             }
           } else {
-            addLog('INFO', 'SCAN_STABLE', `Tarifa consultada en aerolínea oficial: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Mantenida en mínimo`);
+            addLog('INFO', 'SCAN_STABLE', `Tarifa consultada: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Estable`);
           }
 
           currentIdx++;
-        }, 400);
+        }, 450);
       };
 
       const handleRouteAnalysisSubmit = async (e) => {
@@ -980,7 +997,6 @@
         } catch (err) {
           addLog('WARN', 'IA_RUTAS_FALLBACK', 'Generando diagnóstico de escala optimizado en modo seguro.');
           
-          // Generación de diagnóstico estático inteligente según el destino
           let isAsia = routeDest.toLowerCase().includes('tokio') || routeDest.toLowerCase().includes('jap') || routeDest.toLowerCase().includes('bangkok') || routeDest.toLowerCase().includes('bali') || routeDest.toLowerCase().includes('tailandia');
           let isEuropa = routeDest.toLowerCase().includes('madrid') || routeDest.toLowerCase().includes('par') || routeDest.toLowerCase().includes('roma') || routeDest.toLowerCase().includes('esp') || routeDest.toLowerCase().includes('londres');
 
@@ -1088,7 +1104,7 @@
                 <div className="space-y-1 max-w-2xl">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-mono uppercase font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                      🧭 Nuevo: Asistente IA de Escalas & Hubs Conectores
+                      🧭 Asistente IA de Escalas & Hubs Conectores
                     </span>
                     <span className="text-[10px] font-mono uppercase font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
                       ⏰ Alertas al Correo Activas
@@ -1167,8 +1183,6 @@
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {priorityRoutes.map((route, idx) => {
-                    const priceDropped = route.currentPriceCOP < route.baselineRecordCOP;
-
                     return (
                       <div key={route.id} className="glass-card p-4 rounded-3xl space-y-3 relative border border-slate-800 hover:border-cyan-500/50 transition-all flex flex-col justify-between">
                         <div>
@@ -1205,7 +1219,7 @@
                             </div>
                           )}
 
-                          {/* Botón Directo a la Promo Principal + Comparación de Aerolíneas Alternativas */}
+                          {/* Botón Directo a la Promo Principal */}
                           <div className="mt-3 border-t border-slate-800/80 pt-2.5 space-y-2">
                             <a
                               href={route.promoUrl || 'https://jetsmart.com/co/es/'}
@@ -1217,9 +1231,9 @@
                               <IconExternalLink className="w-3.5 h-3.5" />
                             </a>
 
-                            {/* Opciones de comparación en Google Flights y aerolíneas secundarias */}
+                            {/* Opciones de comparación en Google Flights */}
                             <div className="space-y-1 pt-1">
-                              <span className="text-[10px] text-slate-400 font-mono block">Comparar en otros buscadores y aerolíneas:</span>
+                              <span className="text-[10px] text-slate-400 font-mono block">Comparar en otros buscadores:</span>
                               <div className="flex flex-wrap items-center gap-1.5">
                                 <a
                                   href={buildGoogleFlightsUrl(route.originCode || 'BGA', route.destCode || 'BOG', route.departureDate, route.returnDate)}
@@ -1482,7 +1496,6 @@
             {/* Radar de Ofertas */}
             {activeTab === 'radar' && (
               <div className="space-y-5">
-                {/* Banner Explicativo del Radar Global */}
                 <div className="glass-panel p-4 rounded-2xl border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <h3 className="font-extrabold text-sm text-cyan-300 flex items-center gap-2">
@@ -1528,7 +1541,14 @@
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {deals
                     .filter(d => selectedRegion === 'Todas' || d.region === selectedRegion)
-                    .filter(d => !searchQuery.trim() || `${d.origin} ${d.destination} ${d.airline}`.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .filter(d => {
+                      if (!searchQuery.trim()) return true;
+                      const q = searchQuery.toLowerCase();
+                      const origin = (d.origin || '').toLowerCase();
+                      const dest = (d.destination || '').toLowerCase();
+                      const airline = (d.airline || '').toLowerCase();
+                      return origin.includes(q) || dest.includes(q) || airline.includes(q);
+                    })
                     .map(deal => (
                       <div key={deal.id} className="glass-card rounded-3xl p-5 border border-slate-800 flex flex-col justify-between space-y-3">
                         <div className="space-y-2">
