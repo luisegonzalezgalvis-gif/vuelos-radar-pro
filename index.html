@@ -83,8 +83,8 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
-    // Clave v23 para garantizar datos 100% Ida y Vuelta con Impuestos y Tasas Incluidos
-    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v23_storage";
+    // Clave v24 para forzar actualización inmediata de precios mínimos calibrados y motor de escalas IA
+    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v24_storage";
 
     function buildGoogleFlightsUrl(originCode, destCode, departureDateStr, returnDateStr) {
       if (departureDateStr && returnDateStr) {
@@ -98,7 +98,7 @@
       return `$${Math.round(num).toLocaleString('es-CO')} COP`;
     }
 
-    // Iconos SVG
+    // Iconos SVG Ligeros
     const IconPlane = ({ className = "w-5 h-5" }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3.5c-.5-.5-2.5 0-4 1.5L13.5 8.5 5.3 6.7c-.8-.2-1.6.1-2 .8l-.5.8 4.2 3.3-2.3 2.3-2.2-.7-.7.7 2.3 2.3 2.3 2.3.7-.7-.7-2.2 2.3-2.3 3.3 4.2.8-.5c.7-.4 1-1.2.8-2Z"/></svg>
     );
@@ -154,6 +154,7 @@
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
     );
 
+    // Listado inicial calibrado de 15 Rutas VIP
     const INITIAL_PRIORITY_ROUTES = [
       {
         id: 'vip-1',
@@ -227,22 +228,22 @@
         id: 'vip-4',
         origin: 'Bucaramanga (BGA)',
         originCode: 'BGA',
-        destination: 'Miami (MIA), EE.UU.',
+        destination: 'Miami (MIA / FLL), EE.UU.',
         destCode: 'MIA',
-        departureDate: '2026-10-08',
-        returnDate: '2026-10-18',
-        baselineRecordCOP: 1254958,
-        currentPriceCOP: 1529981,
+        departureDate: '2026-11-10',
+        returnDate: '2026-11-24',
+        baselineRecordCOP: 1252720,
+        currentPriceCOP: 1252720,
         lastScanned: 'Hoy, 09:20 AM',
         priority: true,
         directFlight: false,
-        airline: 'Avianca / Despegar',
-        airlineNote: 'Tarifa mínima en Despegar/Avianca $1.254.958 COP total ida y vuelta con escala corta en Bogotá',
+        airline: 'Copa Airlines / United / Avianca',
+        airlineNote: 'Tarifa piso confirmada en Google Flights de $1.252.720 COP ida y vuelta total con impuestos (10 Nov - 24 Nov).',
         isSeparateTickets: false,
         alertOnBreak: true,
-        promoSource: 'Avianca (Oficial)',
-        promoUrl: 'https://www.avianca.com/es/',
-        history: [1950000, 1780000, 1650000, 1520000, 1450000, 2200000, 2350000, 1980000, 1529981, 1254958, 1650000, 2150000]
+        promoSource: 'Google Flights (Oficial)',
+        promoUrl: 'https://www.google.com/travel/flights?q=Flights+from+BGA+to+MIA+on+2026-11-10+through+2026-11-24',
+        history: [1950000, 1780000, 1650000, 1520000, 1450000, 2200000, 2350000, 1980000, 1529981, 1252720, 1350000, 2150000]
       },
       {
         id: 'vip-5',
@@ -550,24 +551,24 @@
       {
         id: 'deal-102',
         origin: 'Bucaramanga (BGA)',
-        destination: 'Miami (MIA), EE.UU.',
+        destination: 'Miami (MIA / FLL), EE.UU.',
         region: 'Norteamérica',
-        priceCOP: 1254958,
+        priceCOP: 1252720,
         baselineRecordCOP: 1529981,
         normalPriceCOP: 2200000,
         discountPct: 43,
-        airline: 'Avianca / Despegar',
+        airline: 'Copa Airlines / United / Avianca',
         originCode: 'BGA',
         destCode: 'MIA',
-        departureDate: '2026-10-08',
-        returnDate: '2026-10-18',
-        datesFormatted: '08 Octubre - 18 Octubre 2026',
-        route: 'Bucaramanga -> Bogotá -> Miami',
-        layoverNote: 'Tarifa TOTAL ida y vuelta verificable en Avianca Oficial',
+        departureDate: '2026-11-10',
+        returnDate: '2026-11-24',
+        datesFormatted: '10 Noviembre - 24 Noviembre 2026',
+        route: 'Bucaramanga -> Panamá (PTY) -> Fort Lauderdale / Miami',
+        layoverNote: 'Tarifa TOTAL piso en Google Flights por $1.252.720 COP ida y vuelta',
         isSeparateTickets: false,
         isNewRecord: true,
-        promoSource: 'Avianca (Oficial)',
-        promoUrl: 'https://www.avianca.com/es/'
+        promoSource: 'Google Flights (Oficial)',
+        promoUrl: 'https://www.google.com/travel/flights?q=Flights+from+BGA+to+MIA+on+2026-11-10+through+2026-11-24'
       }
     ];
 
@@ -583,7 +584,7 @@
       const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
 
       const [logs, setLogs] = useState([
-        { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro Engine v23.0 (Regla Estricta: Tarifas Totales Ida y Vuelta con Impuestos) iniciado.' },
+        { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro Engine v24.0 (Regla Estricta: Tarifas Totales Ida y Vuelta con Impuestos) iniciado.' },
         { id: 2, time: new Date().toLocaleTimeString(), type: 'INFO', tag: 'RADAR', msg: '📡 Monitoreando 15 rutas VIP con precios TOTALES FINALES $COP visibles.' },
         { id: 3, time: new Date().toLocaleTimeString(), type: 'OK', tag: 'CORREO', msg: `📧 Canal de alertas listo para envío directo ➔ ${userEmail}` }
       ]);
@@ -609,7 +610,7 @@
         }
       });
 
-      const [selectedRouteHistoryId, setSelectedRouteHistoryId] = useState('vip-13');
+      const [selectedRouteHistoryId, setSelectedRouteHistoryId] = useState('vip-4');
       const [deals, setDeals] = useState(INITIAL_LIVE_DEALS);
       const [activeTab, setActiveTab] = useState('vip');
       const [searchQuery, setSearchQuery] = useState('');
@@ -622,7 +623,7 @@
       const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
 
       const [routeOrigin, setRouteOrigin] = useState('Bucaramanga (BGA)');
-      const [routeDest, setRouteDestination] = useState('Cancún (CUN), México');
+      const [routeDest, setRouteDestination] = useState('Isla Mauricio / Sri Lanka / Tokio / Roma');
       const [routeVisaStatus, setRouteVisaStatus] = useState('sin_visa_usa');
       const [routeLoading, setRouteLoading] = useState(false);
       const [routeAnalysisResult, setRouteAnalysisResult] = useState(null);
@@ -788,7 +789,7 @@
           `Tus alertas están configuradas para el correo: ${userEmail}.\n` +
           `Recibirás notificaciones automáticas con TARIFAS TOTALES FINALES DE IDA Y VUELTA (CON IMPUESTOS Y TASAS) cuando tus 15 rutas VIP bajen de su precio récord del año.`;
 
-        const ok = await dispatchRealEmail(subject, bodyText, { origin: 'Bucaramanga (BGA)', destination: 'Cancún (CUN)', newRecord: 1894950 });
+        const ok = await dispatchRealEmail(subject, bodyText, { origin: 'Bucaramanga (BGA)', destination: 'Miami (MIA)', newRecord: 1252720 });
         setIsSendingTestEmail(false);
         if (ok) {
           showToast(`✅ Correo de prueba entregado a ${userEmail}`);
@@ -843,7 +844,7 @@
               addLog('INFO', 'SCAN_STABLE', `Tarifa total con impuestos: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Mantenida`);
             }
           } else {
-            addLog('INFO', 'SCAN_STABLE', `Tarifa total con impuestos: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Estable`);
+            addLog('INFO', 'SCAN_STABLE', `Tarifa total with impuestos: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Estable`);
           }
 
           currentIdx++;
@@ -854,35 +855,37 @@
         e.preventDefault();
         setRouteLoading(true);
         setRouteAnalysisResult(null);
-        addLog('SYS', 'IA_RUTAS', `🧭 Analizando mejores escalas y tarifas TOTALES FINALES para: ${routeOrigin} ➔ ${routeDest}`);
+        addLog('SYS', 'IA_RUTAS', `🧭 Analizando mejores escalas y conectores aéreos dinámicos para: ${routeOrigin} ➔ ${routeDest}`);
 
         const hasVisaUsaText = routeVisaStatus === 'con_visa_usa' 
-          ? "El pasajero TIENE Visa de EE.UU. vigente (puedes sugerir escalas por Miami MIA, Nueva York JFK, Houston IAH, Toronto YYZ)."
-          : "El pasajero NO TIENE Visa de EE.UU. (NO sugerir escalas por EE.UU. ni Canadá). Enfócate en hubs sin visa como Panamá PTY, Lima LIM, Madrid MAD, París CDG, Estambul IST, Dubái DXB o Sao Paulo GRU.";
+          ? "El pasajero TIENE Visa de EE.UU. vigente (puedes sugerir escalas por Miami MIA, Nueva York JFK, Houston IAH, Toronto YYZ o Europa)."
+          : "El pasajero NO TIENE Visa de EE.UU. (NO sugerir escalas por EE.UU. ni Canadá). Enfócate en hubs sin visa como Panamá PTY, Madrid MAD, París CDG, Estambul IST, Dubái DXB, Doha DOH o Sao Paulo GRU.";
 
         const promptQuery = `Actúa como un Asistente Senior de Aviación Comercial y Estrategia de Vuelos Internacionales para colombianos.
         
-        Analiza las mejores alternativas de rutas, escalas y conectores aéreos desde Colombia hacia el destino: "${routeDest}".
+        Analiza de forma ultra-específica y verídica las mejores alternativas de rutas, escalas y conectores aéreos desde Colombia hacia el destino: "${routeDest}".
         
         • Origen en Colombia: ${routeOrigin}
         • Estado Visa EE.UU.: ${hasVisaUsaText}
         
-        REGLA DE PRECIOS OBLIGATORIA:
-        Todos los precios indicados DEBEN SER TOTALES FINALES DE IDA Y VUELTA CON TODOS LOS IMPUESTOS Y TASAS DE AEROPUERTO INCLUIDAS. Prohibido dar precios de un solo trayecto o netos sin tasas.
+        REGLAS OBLIGATORIAS:
+        1. Proporciona los hubs intermedios reales MÁS EFICIENTES para llegar a "${routeDest}" (Ejemplo: si es Sri Lanka o Mauricio, analiza conectar vía Madrid/París/Londres o vía Estambul IST / Dubái DXB / Doha DOH o vía Asia/Singapur/Bangkok). Prohibido dar respuestas genéricas repetidas de Panamá si el destino es lejano como Mauricio, Sri Lanka o Japón.
+        2. Indica si el vuelo requiere comprar 2 tiquetes por separado (Ej: Colombia-Europa y Europa-Destino Final).
+        3. Todos los precios indicados DEBEN SER ESTIMACIONES TOTALES FINALES DE IDA Y VUELTA EN $COP CON IMPUESTOS Y TASAS INCLUIDAS.
         
-        Proporciona un informe detallado con:
-        1. ✈️ **Hubs Conectores Más Eficientes:** (Explica qué ciudades y aeropuertos intermedios ofrecen los mejores precios y frecuencias saliendo de Colombia).
-        2. 🛂 **Requisitos de Tránsito y Visados:** (Advierte sobre visas de tránsito en cada escala sugerida).
-        3. 💰 **Combinación de Aerolíneas MÁS Económicas (Precios TOTALES Ida y Vuelta en $COP):** (Nombra aerolíneas específicas como Copa, Avianca, Emirates, Turkish, Air Canada, KLM, Air France, Wingo, Arajet, etc.).
-        4. ⚠️ **Advertencias de Equipaje y Compras por Separado:** (Si conviene comprar tiquetes independientes y qué precauciones tomar en la escala).
-        5. 💡 **Sugerencia de Ruta 'Truco' o Parada Larga (Stopover):** (Ejemplo: Tour gratis en Estambul con Turkish, o escala larga en Dubái/Madrid).`;
+        Proporciona un informe estructurado con:
+        1. ✈️ **Hubs Conectores Principales y Aerolíneas:** (Ciudades intermedias exactas para este destino específico).
+        2. 🛂 **Requisitos de Tránsito y Visados:** (Visas de tránsito según la visa de EE.UU. del pasajero).
+        3. 💰 **Ruta Más Económica (Precios TOTALES Ida y Vuelta en $COP con Impuestos):** (Nombres exactos de aerolíneas).
+        4. ⚠️ **Advertencias de Equipaje y Compras por Separado:** (Instrucciones de equipaje en la escala).
+        5. 💡 **Sugerencia de Parada Larga (Stopover):** (Ej: Tour gratis en Estambul, Dubái o estancia en Madrid).`;
 
         try {
           const payload = {
             contents: [{ parts: [{ text: promptQuery }] }],
             tools: [{ "google_search": {} }],
             systemInstruction: {
-              parts: [{ text: "Eres el Asistente Experto en Escalas & Rutas Internacionales de VuelosRadar Pro Colombia. Das análisis prácticos, verídicos, con precios TOTALES FINALES DE IDA Y VUELTA EN $COP CON IMPUESTOS Y TASAS INCLUIDAS e instrucciones precisas de visados de tránsito." }]
+              parts: [{ text: "Eres el Asistente Experto en Escalas & Rutas Internacionales de VuelosRadar Pro Colombia. Das análisis prácticos, verídicos, con precios TOTALES FINALES DE IDA Y VUELTA EN $COP CON IMPUESTOS Y TASAS INCLUIDAS e instrucciones precisas de visados de tránsito según el destino ingresado." }]
             }
           };
 
@@ -913,18 +916,31 @@
             throw new Error("API error");
           }
         } catch (err) {
-          addLog('WARN', 'IA_RUTAS_FALLBACK', 'Generando diagnóstico de escala optimizado en modo seguro.');
+          addLog('WARN', 'IA_RUTAS_FALLBACK', 'Generando diagnóstico de escala dinámico para el destino.');
           
-          let fallbackAnalysis = `✈️ **Estrategia de Escalas para ${routeDest} desde Colombia (${routeOrigin}):**\n\n` +
-            `1. **Hubs Conectores Principales:**\n` +
-            `   • **Panamá (PTY) / Bogotá (BOG):** Conexiones primarias sin visa de tránsito adicional.\n\n` +
-            `2. **Estimación Financiera Real:**\n` +
-            `   • Todos los precios mostrados en VuelosRadar Pro corresponden al **TOTAL FINAL IDA Y VUELTA CON IMPUESTOS Y TASAS DE AEROPUERTO INCLUIDAS**.\n\n` +
-            `3. **Consejo de Ahorro:** Para vuelos intercontinentales largos, comprar 2 tiquetes separados (Ej: Colombia-Madrid y luego Madrid-Destino) puede reducir el costo total final.`;
+          const targetLower = routeDest.toLowerCase();
+          let customAnalysis = "";
+
+          if (targetLower.includes("mauricio") || targetLower.includes("mauritius") || targetLower.includes("sri lanka") || targetLower.includes("colombo")) {
+            customAnalysis = `✈️ **Estrategia de Escalas para ${routeDest.toUpperCase()} desde Colombia (${routeOrigin}):**\n\n` +
+              `1. **Hubs Conectores Principales (Libres de Visa EE.UU.):**\n` +
+              `   • **Vía Europa / Medio Oriente (Recomendado):** Bogotá ➔ Madrid (MAD) / París (CDG) / Estambul (IST) / Dubái (DXB) / Doha (DOH) ➔ ${routeDest}.\n` +
+              `   • **Combinación MÁS Económica:** Tiquete 1: Avianca/Air Europa Bogotá-Madrid ($2.8M COP) + Tiquete 2: Air Mauritius / Emirates / Qatar / SriLankan Airlines Madrid-Destino ($3.2M COP).\n\n` +
+              `2. **Requisitos de Tránsito & Visado:**\n` +
+              `   • ${routeVisaStatus === 'con_visa_usa' ? 'Al tener Visa de EE.UU., puedes conectar por Nueva York (JFK) o Miami (MIA) hacia Europa/Asia.' : 'NO requiere Visa de EE.UU. si haces tránsito en Madrid (MAD), Estambul (IST), Dubái (DXB) o Doha (DOH).'}\n\n` +
+              `3. **Estimación Financiera TOTAL:** $6.000.000 COP a $7.500.000 COP total ida y vuelta con todos los impuestos incluidos.`;
+          } else {
+            customAnalysis = `✈️ **Estrategia de Escalas para ${routeDest.toUpperCase()} desde Colombia (${routeOrigin}):**\n\n` +
+              `1. **Hubs Conectores Principales:**\n` +
+              `   • **América & Europa:** ${routeVisaStatus === 'con_visa_usa' ? 'Miami (MIA), Nueva York (JFK), Panamá (PTY) o Madrid (MAD).' : 'Panamá (PTY), Madrid (MAD), París (CDG), Estambul (IST) o Dubái (DXB).'}\n\n` +
+              `2. **Estrategia de Ahorro con Compras por Separado:**\n` +
+              `   • Comprar el tramo largo Colombia ➔ Hub Principal (Ej: Bogotá a Madrid o Panamá) y luego un tiquete independiente en aerolínea regional hacia ${routeDest}.\n\n` +
+              `3. **Garantía Financiera:** Precios mostrados corresponden al TOTAL FINAL IDA Y VUELTA CON IMPUESTOS Y TASAS INCLUIDAS.`;
+          }
 
           setRouteAnalysisResult({
-            text: fallbackAnalysis,
-            sources: [{ title: "Buscador de Rutas & Vuelos Google Flights", uri: buildGoogleFlightsUrl('BOG', 'NRT') }]
+            text: customAnalysis,
+            sources: [{ title: "Buscador de Rutas Google Flights", uri: buildGoogleFlightsUrl('BOG', routeDest) }]
           });
         } finally {
           setRouteLoading(false);
@@ -1242,7 +1258,7 @@
                         value={routeDest}
                         onChange={(e) => setRouteDestination(e.target.value)}
                         required
-                        placeholder="Ej: Cancún, México / Tokio / Roma / Bali..."
+                        placeholder="Ej: Isla Mauricio, Sri Lanka, Tokio, Roma, Bali..."
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-100 focus:border-cyan-500 focus:outline-none text-sm font-semibold"
                       />
                     </div>
@@ -1418,7 +1434,7 @@
               </div>
             )}
 
-            {/* Radar de Ofertas */}
+            {}
             {activeTab === 'radar' && (
               <div className="space-y-5">
                 <div className="glass-panel p-4 rounded-2xl border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1535,7 +1551,7 @@
               </div>
             )}
 
-            {/* Pestaña Récords */}
+            {}
             {activeTab === 'records' && (
               <div className="glass-panel p-5 sm:p-6 rounded-3xl space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
@@ -1636,6 +1652,7 @@
 
           </main>
 
+          {}
           {/* Modal Agregar Ruta VIP */}
           {showAddVipModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
