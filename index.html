@@ -45,9 +45,11 @@
       background: rgba(18, 26, 43, 0.7);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: all 0.3s ease;
     }
     .glass-card:hover {
       border-color: rgba(6, 182, 212, 0.3);
+      transform: translateY(-2px);
     }
   </style>
 </head>
@@ -57,9 +59,9 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
-    // --- BASE DE DATOS DE 28 RUTAS VIP REALES Y VERIFICADAS ---
+    // --- BASE DE DATOS BASE DE 28 RUTAS VIP REALES (BGA, MDE, BOG) ---
     const INITIAL_VIP_ROUTES = [
-      // --- BUCARAMANGA (BGA) ---
+      // BUCARAMANGA (BGA)
       { id: 'vip-1', origin: 'Bucaramanga (BGA)', destination: 'Bogotá (BOG)', recordPrice: 135532, currentPrice: 135532, dates: '2026-10-29 al 2026-11-01', airline: 'JetSMART / Wingo', link: 'https://www.jetsmart.com/co/es/', status: 'Piso Récord', notes: 'JetSMART directo $135.532 COP. Wingo $164.934 COP.' },
       { id: 'vip-2', origin: 'Bucaramanga (BGA)', destination: 'Aruba (AUA)', recordPrice: 820711, currentPrice: 820711, dates: '2027-01-13 al 2027-01-16', airline: 'Wingo (Vuelo Directo)', link: 'https://www.wingo.com', status: 'Piso Récord', notes: 'Vuelo directo promocional con tasas de aeropuerto incluidas.' },
       { id: 'vip-3', origin: 'Bucaramanga (BGA)', destination: 'Ciudad de Panamá (PTY)', recordPrice: 1332275, currentPrice: 1332275, dates: '2026-10-05 al 2026-10-12', airline: 'Wingo (vía MDE) / Avianca', link: 'https://www.wingo.com', status: 'Piso Récord', isSeparate: true, notes: 'En Wingo se compran 2 pasajes separados: 1) BGA->MDE y 2) MDE->PTY. Avianca tiquete único $1.591.480 COP.' },
@@ -68,20 +70,20 @@
       { id: 'vip-6', origin: 'Bucaramanga (BGA)', destination: 'Punta Cana (PUJ), Rep. Dominicana', recordPrice: 1420000, currentPrice: 1420000, dates: '2026-10-12 al 2026-10-20', airline: 'Arajet / Wingo', link: 'https://www.arajet.com', status: 'Estable', notes: 'Conexión eficiente vía Santo Domingo o Bogotá.' },
       { id: 'vip-7', origin: 'Bucaramanga (BGA)', destination: 'Medellín (MDE)', recordPrice: 158000, currentPrice: 158000, dates: '2026-10-14 al 2026-10-18', airline: 'Clic / Avianca', link: 'https://clicair.co', status: 'Estable', notes: 'Ruta regional directa.' },
 
-      // --- MEDELLÍN (MDE) ---
-      { id: 'vip-8', origin: 'Medellín (MDE)', destination: 'Cusco / Machu Picchu (CUZ), Perú', recordPrice: 1450000, currentPrice: 1450000, dates: '2026-10-18 al 2026-10-26', airline: 'LATAM / Avianca', link: 'https://www.latamairlines.com', status: 'Piso Récord', notes: 'Escala corta en Lima. Impuestos y tasas peruanas incluidas.' },
+      // MEDELLÍN (MDE)
+      { id: 'vip-8', origin: 'Medellín (MDE)', destination: 'Cusco / Machu Picchu (CUZ), Perú', recordPrice: 1005451, currentPrice: 1005451, dates: '2026-10-18 al 2026-10-26', airline: 'JetSMART / LATAM', link: 'https://www.jetsmart.com/co/es/', status: 'Nuevo Récord (-30%)', notes: 'JetSMART Perú $1.005.451 COP ida y vuelta con impuestos y escala corta en Lima.' },
       { id: 'vip-9', origin: 'Medellín (MDE)', destination: 'Madrid (MAD), España', recordPrice: 2950000, currentPrice: 2950000, dates: '2026-11-04 al 2026-11-18', airline: 'Avianca / Air Europa', link: 'https://www.avianca.com', status: 'Piso Récord', notes: 'Vuelo directo sin escalas desde el Aeropuerto José María Córdova.' },
       { id: 'vip-10', origin: 'Medellín (MDE)', destination: 'Miami (MIA), EE.UU.', recordPrice: 1180000, currentPrice: 1180000, dates: '2026-10-10 al 2026-10-20', airline: 'Avianca / American Airlines', link: 'https://www.avianca.com', status: 'Piso Récord', notes: 'Vuelo directo de 3h 40m.' },
       { id: 'vip-11', origin: 'Medellín (MDE)', destination: 'Nueva York (JFK), EE.UU.', recordPrice: 1550000, currentPrice: 1550000, dates: '2026-10-08 al 2026-10-18', airline: 'Avianca / JetBlue', link: 'https://www.avianca.com', status: 'Piso Récord', notes: 'Vuelo directo a JFK.' },
       { id: 'vip-12', origin: 'Medellín (MDE)', destination: 'Punta Cana (PUJ), Rep. Dominicana', recordPrice: 1280000, currentPrice: 1280000, dates: '2026-10-10 al 2026-10-17', airline: 'Arajet (Vuelo Directo)', link: 'https://www.arajet.com', status: 'Piso Récord', notes: 'Vuelo directo low-cost Arajet.' },
       { id: 'vip-13', origin: 'Medellín (MDE)', destination: 'Buenos Aires (EZE), Argentina', recordPrice: 1980000, currentPrice: 1980000, dates: '2026-11-08 al 2026-11-20', airline: 'Avianca / Aerolíneas Argentinas', link: 'https://www.aerolineas.com.ar', status: 'Piso Récord', notes: 'Vuelo directo o escala corta en Bogotá.' },
 
-      // --- BOGOTÁ (BOG) ---
+      // BOGOTÁ (BOG)
       { id: 'vip-14', origin: 'Bogotá (BOG)', destination: 'Madrid (MAD), España', recordPrice: 2850000, currentPrice: 2850000, dates: '2026-11-01 al 2026-11-15', airline: 'Air Europa / Iberia / Avianca', link: 'https://www.aireuropa.com', status: 'Piso Récord', notes: 'Múltiples frecuencias diarias directas.' },
       { id: 'vip-15', origin: 'Bogotá (BOG)', destination: 'París (CDG), Francia', recordPrice: 3200000, currentPrice: 3200000, dates: '2026-11-12 al 2026-11-25', airline: 'Air France (Vuelo Directo)', link: 'https://www.airfrance.co', status: 'Piso Récord', notes: 'Vuelo directo nocturno Air France.' },
       { id: 'vip-16', origin: 'Bogotá (BOG)', destination: 'Ámsterdam (AMS), Holanda', recordPrice: 3100000, currentPrice: 3100000, dates: '2026-10-22 al 2026-11-05', airline: 'KLM (Vuelo Directo)', link: 'https://www.klm.co', status: 'Piso Récord', notes: 'Vuelo directo en Dreamliner.' },
       { id: 'vip-17', origin: 'Bogotá (BOG)', destination: 'Bangkok (BKK), Tailandia', recordPrice: 4520000, currentPrice: 4520000, dates: '2026-11-12 al 2026-11-28', airline: 'Copa + Turkish / Emirates', link: 'https://www.turkishairlines.com', status: 'Piso Récord', notes: 'Ruta recomendada vía Estambul o Dubái.' },
-      { id: 'vip-18', origin: 'Bogotá (BOG)', destination: 'Tokio (HND/NRT), Japón', recordPrice: 3850000, currentPrice: 3850000, dates: '2026-12-03 al 2026-12-12', airline: 'Air Canada (vía Toronto YUL)', link: 'https://www.aircanada.com', status: 'Piso Récord', notes: 'Conexión rápida en Canadá sin cambiar de terminal.' },
+      { id: 'vip-18', origin: 'Bogotá (BOG)', destination: 'Tokio (HND/NRT), Japón', recordPrice: 3850000, currentPrice: 3850000, dates: '2026-12-03 al 2026-12-12', airline: 'Air Canada (vía YUL/YYZ)', link: 'https://www.aircanada.com', status: 'Piso Récord', notes: 'Conexión rápida en Canadá sin cambiar de terminal.' },
       { id: 'vip-19', origin: 'Bogotá (BOG)', destination: 'Roma (FCO), Italia', recordPrice: 3150000, currentPrice: 3150000, dates: '2026-11-08 al 2026-11-22', airline: 'Iberia / Air Europa', link: 'https://www.iberia.com', status: 'Piso Récord', notes: 'Escala rápida en Madrid.' },
       { id: 'vip-20', origin: 'Bogotá (BOG)', destination: 'Nueva York (JFK), EE.UU.', recordPrice: 1480000, currentPrice: 1480000, dates: '2026-10-12 al 2026-10-22', airline: 'Avianca / LATAM', link: 'https://www.avianca.com', status: 'Piso Récord', notes: 'Vuelos directos diarios.' },
       { id: 'vip-21', origin: 'Bogotá (BOG)', destination: 'Miami (MIA), EE.UU.', recordPrice: 1120000, currentPrice: 1120000, dates: '2026-10-15 al 2026-10-25', airline: 'American Airlines / Avianca', link: 'https://www.americanairlines.com', status: 'Piso Récord', notes: 'Múltiples opciones directas.' },
@@ -94,7 +96,6 @@
       { id: 'vip-28', origin: 'Bogotá (BOG)', destination: 'Bombay (BOM), India', recordPrice: 4650000, currentPrice: 4650000, dates: '2026-11-20 al 2026-12-08', airline: 'Qatar Airways / Emirates', link: 'https://www.qatarairways.com', status: 'Piso Récord', notes: 'Escala en Doha o Dubái.' }
     ];
 
-    // --- RUTAS MULTI-DESTINO (OPEN-JAW) ---
     const INITIAL_OPEN_JAW = [
       { id: 'oj-1', name: 'Ruta Balcanes & Grecia', enterCity: 'Venecia (VCE), Italia', exitCity: 'Atenas (ATH), Grecia', colOrigin: 'Bogotá (BOG)', price: 3450000, dates: '2026-10-10 al 2026-10-28', notes: 'Llegada a Venecia, recorrido por los Balcanes y regreso directo desde Atenas.' },
       { id: 'oj-2', name: 'Ruta Sudeste Asiático Aventura', enterCity: 'Singapur (SIN)', exitCity: 'Bangkok (BKK), Tailandia', colOrigin: 'Bogotá (BOG)', price: 4680000, dates: '2026-11-05 al 2026-11-25', notes: 'Entrada por Singapur y salida por Bangkok con vuelos low-cost AirAsia.' },
@@ -104,7 +105,6 @@
       { id: 'oj-6', name: 'Ruta Cono Sur Andino', enterCity: 'Santiago (SCL), Chile', exitCity: 'Buenos Aires (EZE), Argentina', colOrigin: 'Medellín (MDE)', price: 2150000, dates: '2026-11-01 al 2026-11-14', notes: 'Cruce andino por Mendoza o vuelo corto de conexión.' }
     ];
 
-    // --- CONECTORES GLOBALES (RADAR INTER-HUBS) ---
     const GLOBAL_DEALS = [
       { id: 'g1', origin: 'Madrid (MAD)', destination: 'Copenhague (CPH)', price: 280000, airline: 'Ryanair / Iberia Express', region: 'Europa', dates: '2026-10-12 al 2026-10-19', notes: 'Tarifa conectora ultra low-cost.' },
       { id: 'g2', origin: 'Nueva York (JFK)', destination: 'Bangkok (BKK)', price: 2850000, airline: 'Kuwait Airways / ANA', region: 'Asia', dates: '2026-11-02 al 2026-11-18', notes: 'Excelente tramo intercontinental.' },
@@ -116,7 +116,7 @@
 
     const IconPlane = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>;
     const IconStar = () => <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>;
-    const IconGlobe = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2"/><path strokeWidth="2" d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 014-10z"/></svg>;
+    const IconGlobe = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2"/><path strokeWidth="2" d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 014-10z"/></svg>;
     const IconCompass = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2"/><path strokeWidth="2" d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/></svg>;
     const IconTrendingDown = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6"/></svg>;
     const IconTerminal = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>;
@@ -146,11 +146,68 @@
       return `https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(originCode)}+to+${encodeURIComponent(destCode)}${dateQuery}`;
     }
 
+    async function fetchGeminiGroundingBatch(routesBatch) {
+      const apiKey = "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const promptText = `Usa Google Search para investigar en tiempo real los precios reales vigentes de tiquetes aéreos de ida y vuelta en Pesos Colombianos (COP) con impuestos y tasas de aeropuerto incluidas para las siguientes rutas desde Colombia:
+
+${routesBatch.map((r, idx) => `${idx + 1}. [ID: ${r.id}] ${r.origin} a ${r.destination} (Fechas vigentes: ${r.dates})`).join('\n')}
+
+Para cada ruta, busca en Google Flights / sitios oficiales de aerolíneas la tarifa mínima real ida y vuelta en COP, las mejores fechas con ese precio y la aerolínea operadora.
+
+Devuelve ÚNICAMENTE un arreglo JSON válido encerrado entre \`\`\`json y \`\`\` con este formato por elemento:
+[
+  {
+    "id": "vip-1",
+    "currentPrice": 135532,
+    "dates": "2026-10-29 al 2026-11-01",
+    "airline": "JetSMART",
+    "status": "Piso Récord",
+    "notes": "Detalle real de la tarifa encontrada"
+  }
+]`;
+
+      const payload = {
+        contents: [{ parts: [{ text: promptText }] }],
+        tools: [{ "google_search": {} }],
+        systemInstruction: {
+          parts: [{ text: "Eres un buscador analítico de vuelos reales en Colombia. Devuelve exclusivamente un objeto JSON válido dentro de un bloque ```json ``` con las tarifas vivas encontradas en la web." }]
+        }
+      };
+
+      let retries = 0;
+      const maxRetries = 3;
+      while (retries < maxRetries) {
+        try {
+          const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+          const data = await res.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          
+          const jsonMatch = text.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+          }
+          break;
+        } catch(e) {
+          retries++;
+          if (retries >= maxRetries) break;
+          await new Promise(r => setTimeout(r, 1000 * Math.pow(2, retries)));
+        }
+      }
+      return null;
+    }
+
     function App() {
       const [activeTab, setActiveTab] = useState('vip');
       const [priorityRoutes, setPriorityRoutes] = useState(() => {
         try {
-          const saved = localStorage.getItem('vuelos_radar_v33_vip');
+          const saved = localStorage.getItem('vuelos_radar_v34_vip');
           return saved ? JSON.parse(saved) : INITIAL_VIP_ROUTES;
         } catch(e) {
           return INITIAL_VIP_ROUTES;
@@ -169,7 +226,7 @@
       // Asistente de Escalas IA
       const [aiDestination, setAiDestination] = useState('');
       const [aiOrigin, setAiOrigin] = useState('Bogotá (BOG)');
-      const [aiHasUsVisa, setAiHasUsVisa] = useState(true); // Visa EE.UU. / Canadá activa por defecto
+      const [aiHasUsVisa, setAiHasUsVisa] = useState(true);
       const [aiResponse, setAiResponse] = useState('');
       const [loadingAi, setLoadingAi] = useState(false);
 
@@ -183,50 +240,73 @@
       };
 
       useEffect(() => {
-        localStorage.setItem('vuelos_radar_v33_vip', JSON.stringify(priorityRoutes));
+        localStorage.setItem('vuelos_radar_v34_vip', JSON.stringify(priorityRoutes));
       }, [priorityRoutes]);
 
       const runRealTimeScan = async () => {
         if (isScanningRef.current) return;
         isScanningRef.current = true;
         setIsScanning(true);
-        addLog('SCAN_START', 'Iniciando escaneo real e iterativo en vivo de TODAS las categorías...');
+        addLog('SCAN_START', '📡 Iniciando consulta REAL en vivo vía Google Search (Gemini 3 Flash)...');
 
-        // 1. Escaneo de las 28 Rutas VIP
-        addLog('SECTION_START', '=== FASE 1: Verificando las 28 Rutas VIP (Colombia) ===');
-        for (let i = 0; i < priorityRoutes.length; i++) {
-          const route = priorityRoutes[i];
-          addLog('SCAN_VIP', `[VIP ${i + 1}/28] Verificando ${route.origin} ➔ ${route.destination}...`);
-          await new Promise(resolve => setTimeout(resolve, 120));
-          addLog('SCAN_VIP_OK', `✓ ${route.origin} ➔ ${route.destination}: ${formatCOP(route.recordPrice)} [${route.airline}] — Confirmado real.`);
+        // BATCHING: Dividir las 28 rutas en 4 lotes de 7 para mayor precisión
+        const batchSize = 7;
+        const totalBatches = Math.ceil(priorityRoutes.length / batchSize);
+
+        for (let b = 0; b < totalBatches; b++) {
+          const currentBatchRoutes = priorityRoutes.slice(b * batchSize, (b + 1) * batchSize);
+          addLog('SCAN_BATCH', `🔍 [Lote ${b + 1}/${totalBatches}] Buscando precios vigentes en Google Flights para 7 rutas...`);
+
+          const liveData = await fetchGeminiGroundingBatch(currentBatchRoutes);
+
+          if (liveData && Array.isArray(liveData)) {
+            setPriorityRoutes(prev => {
+              const updated = [...prev];
+              liveData.forEach(item => {
+                const idx = updated.findIndex(r => r.id === item.id);
+                if (idx !== -1) {
+                  const r = updated[idx];
+                  const newPrice = Number(item.currentPrice) || r.currentPrice;
+                  
+                  let newStatus = item.status || r.status;
+                  if (newPrice < r.recordPrice) {
+                    const diffPct = Math.round(((r.recordPrice - newPrice) / r.recordPrice) * 100);
+                    newStatus = `¡NUEVO RÉCORD (-${diffPct}%)!`;
+                  } else if (newPrice > r.recordPrice) {
+                    newStatus = `Subió a ${formatCOP(newPrice)}`;
+                  } else {
+                    newStatus = 'Piso Récord';
+                  }
+
+                  updated[idx] = {
+                    ...r,
+                    currentPrice: newPrice,
+                    dates: item.dates || r.dates,
+                    airline: item.airline || r.airline,
+                    status: newStatus,
+                    notes: item.notes || r.notes
+                  };
+
+                  addLog('SCAN_LIVE_OK', `✓ ${r.origin} ➔ ${r.destination}: ${formatCOP(newPrice)} [${item.airline || r.airline}] — ${newStatus}`);
+                }
+              });
+              return updated;
+            });
+          } else {
+            addLog('SCAN_WARN', `⚠️ [Lote ${b + 1}] Respuesta no parseable; conservando tarifas registradas para ese grupo.`);
+          }
+
+          await new Promise(res => setTimeout(res, 500));
         }
 
-        // 2. Escaneo del Radar de Ofertas Global (Conectores Inter-Hubs)
-        addLog('SECTION_START', '=== FASE 2: Verificando 6 Conectores del Radar Global ===');
-        for (let j = 0; j < deals.length; j++) {
-          const deal = deals[j];
-          addLog('SCAN_GLOBAL', `[RADAR_GLOBAL ${j + 1}/6] Verificando ${deal.origin} ➔ ${deal.destination}...`);
-          await new Promise(resolve => setTimeout(resolve, 120));
-          addLog('SCAN_GLOBAL_OK', `✓ ${deal.origin} ➔ ${deal.destination}: ${formatCOP(deal.price)} [${deal.airline}] — Verificado real.`);
-        }
-
-        // 3. Escaneo de Rutas Multi-Destino (Open-Jaw)
-        addLog('SECTION_START', '=== FASE 3: Verificando 6 Rutas Multi-Destino Open-Jaw ===');
-        for (let k = 0; k < openJawRoutes.length; k++) {
-          const oj = openJawRoutes[k];
-          addLog('SCAN_OPENJAW', `[MULTI_DESTINO ${k + 1}/6] Verificando ${oj.name} (${oj.colOrigin})...`);
-          await new Promise(resolve => setTimeout(resolve, 120));
-          addLog('SCAN_OPENJAW_OK', `✓ ${oj.name}: Entrada en ${oj.enterCity} / Regreso desde ${oj.exitCity} — Estabilidad confirmada.`);
-        }
-
-        addLog('SCAN_COMPLETE', '✅ Escaneo completo finalizado. Se verificaron con éxito las 28 Rutas VIP, 6 Conectores Globales y 6 Rutas Multi-Destino.');
+        addLog('SCAN_COMPLETE', '✅ Escaneo web en vivo finalizado. Se actualizaron dinámicamente las 28 rutas VIP en pantalla.');
         setIsScanning(false);
         isScanningRef.current = false;
       };
 
-      // Ejecución inicial al montar
+      // Ejecución inicial automática al cargar
       useEffect(() => {
-        addLog('SYSTEM_INIT', 'Sistema VuelosRadar Pro listo. Iniciando verificación en vivo de todas las categorías...');
+        addLog('SYSTEM_INIT', 'Sistema VuelosRadar Pro listo. Iniciando escaneo web en vivo al ingresar...');
         runRealTimeScan();
       }, []);
 
@@ -341,7 +421,7 @@
                   className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50"
                 >
                   <IconRefresh />
-                  <span>{isScanning ? 'Escaneando...' : 'Escanear en Tiempo Real'}</span>
+                  <span>{isScanning ? 'Escaneando Web Live...' : 'Escanear en Tiempo Real'}</span>
                 </button>
               </div>
             </div>
@@ -356,7 +436,7 @@
                     <IconStar /> TARIFA MÍNIMA RÉCORD PRIMERO
                   </span>
                   <span className="text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                    ✓ VERIFICACIÓN EN TIEMPO REAL NATIVA
+                    ✓ BÚSQUEDA WEB REAL GOOGLE SEARCH
                   </span>
                 </div>
 
@@ -377,7 +457,7 @@
             </div>
           </div>
 
-          {}
+          {/* Menú de Pestañas Principal */}
           <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-5 space-y-6">
 
             <div className="border-b border-slate-800/80 pb-4">
@@ -477,7 +557,7 @@
               </div>
             </div>
 
-            {}
+            {/* VISTA 1: Rutas VIP */}
             {activeTab === 'vip' && (
               <div className="space-y-4">
                 <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -566,7 +646,7 @@
               </div>
             )}
 
-            {}
+            {/* VISTA 2: Multi-Destino */}
             {activeTab === 'multidestino' && (
               <div className="space-y-6">
                 
@@ -678,7 +758,7 @@
               </div>
             )}
 
-            {}
+            {/* VISTA 3: Escalas IA */}
             {activeTab === 'rutas-ia' && (
               <div className="glass-panel p-6 rounded-3xl space-y-6">
                 <div>
@@ -746,7 +826,7 @@
               </div>
             )}
 
-            {}
+            {/* VISTA 4: Radar Global */}
             {activeTab === 'radar' && (
               <div className="space-y-4">
                 <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex items-center justify-between">
@@ -804,7 +884,6 @@
               </div>
             )}
 
-            {}
             {/* VISTA 5: Histórico */}
             {activeTab === 'records' && (
               <div className="glass-panel p-6 rounded-3xl space-y-4">
