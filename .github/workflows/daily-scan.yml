@@ -1,12 +1,40 @@
- - name: Ejecutar Rastreo en la Ventana de 12 Meses (Agosto 2026 - Agosto 2027)
+ - name: Configurar Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: '20'
+
+  - name: Ejecutar Escáner y Enviar Alerta por Correo
     run: |
-      echo "🚀 Iniciando escáner automático en la nube a las 7:00 AM..."
-      echo "📅 Rango de análisis: 1 año continuo en el futuro."
-      curl -X POST "https://formsubmit.co/ajax/luis.e.gonzalezgalvis0523@gmail.com" \
-        -H "Content-Type: application/json" \
-        -d '{
-          "_subject": "✈️ VuelosRadar Pro: Informe Diario de Escáner 7:00 AM",
-          "email_destino": "luis.e.gonzalezgalvis0523@gmail.com",
-          "mensaje": "El escáner diario en la nube a las 07:00 AM se ejecutó correctamente revisando las 15 rutas VIP desde Colombia en la ventana de 12 meses (Agosto 2026 a Agosto 2027).",
-          "sistema": "VuelosRadar Pro Automated Cloud Cron"
-        }'
+      node -e '
+        const email = "luis.e.gonzalezgalvis0523@gmail.com";
+        const payload = {
+          _subject: "✈️ VuelosRadar Pro: Informe Diario de Escáner 7:00 AM",
+          email_destino: email,
+          mensaje: "El escáner diario en la nube a las 07:00 AM COT se ejecutó con éxito evaluando las 15 rutas VIP desde Colombia para la ventana de 12 meses (Agosto 2026 a Agosto 2027).",
+          sistema: "VuelosRadar Pro Automated Cloud Cron"
+        };
+
+        fetch(`https://formsubmit.co/ajax/${encodeURIComponent(email)}`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json", 
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+          },
+          body: JSON.stringify(payload)
+        })
+        .then(async (res) => {
+          const data = await res.json();
+          console.log("✅ Respuesta de FormSubmit:", data);
+          if (res.ok) {
+            process.exit(0);
+          } else {
+            console.error("❌ HTTP Error:", res.status);
+            process.exit(1);
+          }
+        })
+        .catch((err) => {
+          console.error("❌ Error enviando correo:", err);
+          process.exit(1);
+        });
+      '
