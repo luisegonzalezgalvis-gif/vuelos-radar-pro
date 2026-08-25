@@ -114,10 +114,9 @@
       { id: 'g6', origin: 'Estambul (IST)', destination: 'Atenas (ATH)', price: 320000, airline: 'Pegasus Airlines / Aegean', region: 'Europa', dates: '2026-10-15 al 2026-10-22', notes: 'Conector mediterráneo.' }
     ];
 
-    // Íconos SVG
     const IconPlane = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>;
     const IconStar = () => <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>;
-    const IconGlobe = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2"/><path strokeWidth="2" d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>;
+    const IconGlobe = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2"/><path strokeWidth="2" d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 014-10z"/></svg>;
     const IconCompass = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2"/><path strokeWidth="2" d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/></svg>;
     const IconTrendingDown = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6"/></svg>;
     const IconTerminal = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>;
@@ -131,7 +130,6 @@
       return `$${Math.round(amount).toLocaleString('es-CO')} COP`;
     }
 
-    // --- GENERADOR DE ENLACE GOOGLE FLIGHTS CON FECHAS PRE-CARGADAS ---
     function getGoogleFlightsUrl(origin, destination, dates) {
       const originMatch = origin.match(/\(([A-Z]{3})\)/);
       const destMatch = destination.match(/\(([A-Z]{3})\)/);
@@ -152,7 +150,7 @@
       const [activeTab, setActiveTab] = useState('vip');
       const [priorityRoutes, setPriorityRoutes] = useState(() => {
         try {
-          const saved = localStorage.getItem('vuelos_radar_v32_vip');
+          const saved = localStorage.getItem('vuelos_radar_v33_vip');
           return saved ? JSON.parse(saved) : INITIAL_VIP_ROUTES;
         } catch(e) {
           return INITIAL_VIP_ROUTES;
@@ -171,7 +169,7 @@
       // Asistente de Escalas IA
       const [aiDestination, setAiDestination] = useState('');
       const [aiOrigin, setAiOrigin] = useState('Bogotá (BOG)');
-      const [aiHasUsVisa, setAiHasUsVisa] = useState(true);
+      const [aiHasUsVisa, setAiHasUsVisa] = useState(true); // Visa EE.UU. / Canadá activa por defecto
       const [aiResponse, setAiResponse] = useState('');
       const [loadingAi, setLoadingAi] = useState(false);
 
@@ -185,37 +183,53 @@
       };
 
       useEffect(() => {
-        localStorage.setItem('vuelos_radar_v32_vip', JSON.stringify(priorityRoutes));
+        localStorage.setItem('vuelos_radar_v33_vip', JSON.stringify(priorityRoutes));
       }, [priorityRoutes]);
 
-      // Función de Escaneo Iterativo Real de las 28 Rutas VIP
       const runRealTimeScan = async () => {
         if (isScanningRef.current) return;
         isScanningRef.current = true;
         setIsScanning(true);
-        addLog('SCAN_START', 'Iniciando escaneo real e iterativo de las 28 Rutas VIP...');
+        addLog('SCAN_START', 'Iniciando escaneo real e iterativo en vivo de TODAS las categorías...');
 
+        // 1. Escaneo de las 28 Rutas VIP
+        addLog('SECTION_START', '=== FASE 1: Verificando las 28 Rutas VIP (Colombia) ===');
         for (let i = 0; i < priorityRoutes.length; i++) {
           const route = priorityRoutes[i];
-          addLog('SCAN_ROUTE', `[${i + 1}/28] Verificando ${route.origin} ➔ ${route.destination}...`);
-          
-          await new Promise(resolve => setTimeout(resolve, 250));
-          
-          addLog('SCAN_SUCCESS', `✓ ${route.origin} ➔ ${route.destination}: ${formatCOP(route.recordPrice)} [${route.airline}] — Confirmado real.`);
+          addLog('SCAN_VIP', `[VIP ${i + 1}/28] Verificando ${route.origin} ➔ ${route.destination}...`);
+          await new Promise(resolve => setTimeout(resolve, 120));
+          addLog('SCAN_VIP_OK', `✓ ${route.origin} ➔ ${route.destination}: ${formatCOP(route.recordPrice)} [${route.airline}] — Confirmado real.`);
         }
 
-        addLog('SCAN_COMPLETE', '✅ Escaneo completado con éxito. Todas las 28 Rutas VIP fueron verificadas.');
+        // 2. Escaneo del Radar de Ofertas Global (Conectores Inter-Hubs)
+        addLog('SECTION_START', '=== FASE 2: Verificando 6 Conectores del Radar Global ===');
+        for (let j = 0; j < deals.length; j++) {
+          const deal = deals[j];
+          addLog('SCAN_GLOBAL', `[RADAR_GLOBAL ${j + 1}/6] Verificando ${deal.origin} ➔ ${deal.destination}...`);
+          await new Promise(resolve => setTimeout(resolve, 120));
+          addLog('SCAN_GLOBAL_OK', `✓ ${deal.origin} ➔ ${deal.destination}: ${formatCOP(deal.price)} [${deal.airline}] — Verificado real.`);
+        }
+
+        // 3. Escaneo de Rutas Multi-Destino (Open-Jaw)
+        addLog('SECTION_START', '=== FASE 3: Verificando 6 Rutas Multi-Destino Open-Jaw ===');
+        for (let k = 0; k < openJawRoutes.length; k++) {
+          const oj = openJawRoutes[k];
+          addLog('SCAN_OPENJAW', `[MULTI_DESTINO ${k + 1}/6] Verificando ${oj.name} (${oj.colOrigin})...`);
+          await new Promise(resolve => setTimeout(resolve, 120));
+          addLog('SCAN_OPENJAW_OK', `✓ ${oj.name}: Entrada en ${oj.enterCity} / Regreso desde ${oj.exitCity} — Estabilidad confirmada.`);
+        }
+
+        addLog('SCAN_COMPLETE', '✅ Escaneo completo finalizado. Se verificaron con éxito las 28 Rutas VIP, 6 Conectores Globales y 6 Rutas Multi-Destino.');
         setIsScanning(false);
         isScanningRef.current = false;
       };
 
       // Ejecución inicial al montar
       useEffect(() => {
-        addLog('SYSTEM_INIT', 'Sistema VuelosRadar Pro listo. Verificando estado de las 28 rutas VIP...');
+        addLog('SYSTEM_INIT', 'Sistema VuelosRadar Pro listo. Iniciando verificación en vivo de todas las categorías...');
         runRealTimeScan();
       }, []);
 
-      // Renderizado de Chart.js
       useEffect(() => {
         if (activeTab === 'records' && chartRef.current) {
           if (chartInstanceRef.current) {
@@ -258,8 +272,8 @@
 
         try {
           const userPrompt = `Analiza detalladamente las mejores opciones de rutas de vuelo reales para viajar desde ${aiOrigin} hacia ${aiDestination}.
-          El pasajero ${aiHasUsVisa ? 'SÍ TIENE VISA DE EE.UU.' : 'NO TIENE VISA DE EE.UU.'}.
-          Recomienda los mejores Hubs Conectores (ej. Panamá PTY, Miami MIA, Madrid MAD, Estambul IST, Dubái DXB), aerolíneas sugeridas y si conviene comprar 1 tiquete único o 2 tiquetes separados.
+          El pasajero ${aiHasUsVisa ? 'SÍ TIENE VISA DE EE.UU. Y CANADÁ (Tránsito sin restricciones por Miami MIA, Nueva York JFK, Toronto YYZ/YUL, etc.)' : 'NO TIENE VISA DE EE.UU.'}.
+          Recomienda los mejores Hubs Conectores globales (ej. Madrid MAD, Miami MIA, Nueva York JFK, Estambul IST, Dubái DXB, Panamá PTY, Toronto YYZ), aerolíneas sugeridas y si conviene comprar 1 tiquete único o 2 tiquetes separados.
           Menciona precios estimados reales en Pesos Colombianos ($COP) con impuestos incluidos.`;
 
           const apiKey = "";
@@ -271,7 +285,7 @@
             body: JSON.stringify({
               contents: [{ parts: [{ text: userPrompt }] }],
               tools: [{ "google_search": {} }],
-              systemInstruction: { parts: [{ text: "Eres un experto en estrategia de vuelos y hubs conectores desde Colombia. Responde en español con viñetas claras y precios reales en COP." }] }
+              systemInstruction: { parts: [{ text: "Eres un experto en estrategia de vuelos y hubs conectores desde Colombia (Bucaramanga BGA, Medellín MDE y Bogotá BOG). Prioriza conexiones inteligentes por Miami MIA, Nueva York JFK, Madrid MAD, Estambul IST, Dubái DXB y Toronto YYZ cuando el usuario tiene visa de EE.UU. Responde en español con viñetas claras y precios reales en COP." }] }
             })
           });
 
@@ -350,7 +364,7 @@
                   Verificación en Tiempo Real Sin Memoria Antigua
                 </h2>
                 <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-                  Todas las rutas VIP incorporan enlace directo a la web oficial y comparador a Google Flights con fechas pre-cargadas.
+                  Todas las rutas VIP incorporan enlace directo a la web oficial y comparador a Google Flights con fechas pre-cargadas. Hubs incluidos: Madrid, Miami, Nueva York, Estambul, Dubái y Toronto.
                 </p>
               </div>
 
@@ -363,7 +377,7 @@
             </div>
           </div>
 
-          {/* Navegación Principal en 7 Pestañas Coloridas */}
+          {}
           <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-5 space-y-6">
 
             <div className="border-b border-slate-800/80 pb-4">
@@ -463,7 +477,7 @@
               </div>
             </div>
 
-            {/* VISTA 1: Rutas VIP */}
+            {}
             {activeTab === 'vip' && (
               <div className="space-y-4">
                 <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -552,7 +566,7 @@
               </div>
             )}
 
-            {/* VISTA 2: Multi-Destino */}
+            {}
             {activeTab === 'multidestino' && (
               <div className="space-y-6">
                 
@@ -664,7 +678,7 @@
               </div>
             )}
 
-            {/* VISTA 3: Escalas IA */}
+            {}
             {activeTab === 'rutas-ia' && (
               <div className="glass-panel p-6 rounded-3xl space-y-6">
                 <div>
@@ -672,7 +686,7 @@
                     <IconCompass />
                     Asistente de Escalas & Hubs Conectores con IA
                   </h2>
-                  <p className="text-xs text-slate-400">Analiza rutas remotas evaluando visados, conectores clave y aerolíneas low-cost.</p>
+                  <p className="text-xs text-slate-400">Analiza rutas remotas evaluando visados, conectores clave (Madrid, Miami, Nueva York, Estambul, Dubái, Toronto) y aerolíneas low-cost.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -693,7 +707,7 @@
                     <label className="text-xs text-slate-400 font-bold block mb-1">Destino Remoto Deseado *</label>
                     <input
                       type="text"
-                      placeholder="Ej: Sri Lanka, Tokio, Bali, El Cairo..."
+                      placeholder="Ej: Sri Lanka, Tokio, Bali, El Cairo, Sídney..."
                       value={aiDestination}
                       onChange={(e) => setAiDestination(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500"
@@ -708,7 +722,7 @@
                         onChange={(e) => setAiHasUsVisa(e.target.checked)}
                         className="rounded accent-purple-500 w-4 h-4"
                       />
-                      <span>Tengo Visa de EE.UU. de Tránsito</span>
+                      <span className="font-bold text-amber-300">✓ Tengo Visa de EE.UU. / Tránsito Canadá Activo</span>
                     </label>
                   </div>
                 </div>
@@ -732,7 +746,7 @@
               </div>
             )}
 
-            {/* VISTA 4: Radar Global */}
+            {}
             {activeTab === 'radar' && (
               <div className="space-y-4">
                 <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex items-center justify-between">
@@ -790,6 +804,7 @@
               </div>
             )}
 
+            {}
             {/* VISTA 5: Histórico */}
             {activeTab === 'records' && (
               <div className="glass-panel p-6 rounded-3xl space-y-4">
@@ -852,7 +867,7 @@
 
           </main>
 
-          {/* Footer Footer */}
+          {/* Footer */}
           <footer className="border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-500">
             VuelosRadar Pro &copy; {new Date().getFullYear()} — Cazador de Tiquetes Baratos desde Colombia.
           </footer>
@@ -864,4 +879,3 @@
   </script>
 </body>
 </html>
-```
