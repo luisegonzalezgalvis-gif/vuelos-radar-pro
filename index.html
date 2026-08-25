@@ -80,7 +80,7 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
-    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v20_storage";
+    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v21_storage";
 
     function buildGoogleFlightsUrl(originCode, destCode, departureDateStr, returnDateStr) {
       if (departureDateStr && returnDateStr) {
@@ -668,8 +668,8 @@
       const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
 
       const [logs, setLogs] = useState([
-        { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro Engine v20.0 (Sincronizado) iniciado.' },
-        { id: 2, time: new Date().toLocaleTimeString(), type: 'INFO', tag: 'RADAR', msg: '📡 Monitoreando 15 rutas VIP con precios verídicos en $COP.' },
+        { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro Engine v21.0 iniciado.' },
+        { id: 2, time: new Date().toLocaleTimeString(), type: 'INFO', tag: 'RADAR', msg: '📡 Monitoreando 15 rutas VIP con bloques de precios $COP visibles.' },
         { id: 3, time: new Date().toLocaleTimeString(), type: 'OK', tag: 'CORREO', msg: `📧 Canal de alertas listo para envío directo ➔ ${userEmail}` }
       ]);
       const terminalEndRef = useRef(null);
@@ -694,7 +694,7 @@
         }
       });
 
-      const [selectedRouteHistoryId, setSelectedRouteHistoryId] = useState('vip-5');
+      const [selectedRouteHistoryId, setSelectedRouteHistoryId] = useState('vip-1');
       const [deals, setDeals] = useState(INITIAL_LIVE_DEALS);
       const [activeTab, setActiveTab] = useState('vip');
       const [searchQuery, setSearchQuery] = useState('');
@@ -706,7 +706,6 @@
       const isScanningRef = useRef(false);
       const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
 
-      // Estado para Asistente IA de Escalas
       const [routeOrigin, setRouteOrigin] = useState('Bucaramanga (BGA)');
       const [routeDest, setRouteDestination] = useState('Tokio, Japón');
       const [routeVisaStatus, setRouteVisaStatus] = useState('con_visa_usa');
@@ -728,7 +727,6 @@
         setTimeout(() => setToastMsg(''), 4500);
       };
 
-      // Chart.js renderizado seguro en tab 'records'
       useEffect(() => {
         if (activeTab === 'records') {
           const timer = setTimeout(() => {
@@ -1160,7 +1158,6 @@
               })}
             </div>
 
-            {/* Pestaña VIP */}
             {activeTab === 'vip' && (
               <div className="space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass-panel p-4 rounded-2xl">
@@ -1169,7 +1166,7 @@
                       <IconStar className="w-5 h-5 text-amber-400" />
                       Mis 15 Rutas Prioritarias — Enlace Único a la Promo Exacta
                     </h3>
-                    <p className="text-xs text-slate-400">Sin enlaces redundantes. Haz clic en el botón directo para ir al sitio exacto de la tarifa baja.</p>
+                    <p className="text-xs text-slate-400">Precios garantizados e información clara del tiquete.</p>
                   </div>
 
                   <button
@@ -1183,6 +1180,8 @@
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {priorityRoutes.map((route, idx) => {
+                    const priceDropped = route.currentPriceCOP < route.baselineRecordCOP;
+
                     return (
                       <div key={route.id} className="glass-card p-4 rounded-3xl space-y-3 relative border border-slate-800 hover:border-cyan-500/50 transition-all flex flex-col justify-between">
                         <div>
@@ -1208,6 +1207,27 @@
                               <span className="text-[11px] text-emerald-400 font-bold block pt-1 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30 mt-1">
                                 ✈️ Aerolínea: {route.airline}
                               </span>
+                            )}
+                          </div>
+
+                          {/* BLOQUE DE PRECIOS DESTACADO */}
+                          <div className="mt-3 bg-slate-950/90 p-3.5 rounded-2xl border border-slate-800/90 space-y-2">
+                            <div className="flex items-center justify-between text-xs font-mono">
+                              <span className="text-slate-400 text-[10px] uppercase font-sans">Mínimo Récord (1 Año):</span>
+                              <span className="text-slate-300 font-bold">{formatCOP(route.baselineRecordCOP)}</span>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs font-mono border-t border-slate-800/80 pt-1.5">
+                              <span className="text-slate-400 text-[10px] uppercase font-sans">Precio Actual en Radar:</span>
+                              <span className={`text-base font-black ${priceDropped ? 'text-emerald-400 animate-pulse' : 'text-cyan-400'}`}>
+                                {formatCOP(route.currentPriceCOP)}
+                              </span>
+                            </div>
+
+                            {route.airlineNote && (
+                              <p className="text-[10px] text-slate-300 font-sans border-t border-slate-800/80 pt-1.5 leading-snug">
+                                ℹ️ {route.airlineNote}
+                              </p>
                             )}
                           </div>
 
@@ -1283,7 +1303,7 @@
               </div>
             )}
 
-            {}
+            {/* Pestaña Asistente de Escalas IA */}
             {activeTab === 'rutas-ia' && (
               <div className="glass-panel p-5 sm:p-6 rounded-3xl space-y-6 max-w-4xl mx-auto">
                 <div className="border-b border-slate-800 pb-4">
@@ -1607,7 +1627,7 @@
               </div>
             )}
 
-            {}
+            {/* Pestaña Récords */}
             {activeTab === 'records' && (
               <div className="glass-panel p-5 sm:p-6 rounded-3xl space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
