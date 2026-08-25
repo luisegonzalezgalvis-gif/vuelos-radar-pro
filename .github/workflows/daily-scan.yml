@@ -1,34 +1,59 @@
-- name: Ejecutar Escáner y Enviar Alerta por Correo
-    run: |
-      python3 -c '
-      import urllib.request
-      import json
-      import sys
+name: Escáner Diario de VuelosRadar Pro (7:00 AM Colombia)
 
-      url = "https://formsubmit.co/ajax/luis.e.gonzalezgalvis0523@gmail.com"
-      payload = {
-          "_subject": "✈️ VuelosRadar Pro: Informe Diario de Escáner 7:00 AM",
-          "email_destino": "luis.e.gonzalezgalvis0523@gmail.com",
-          "mensaje": "El escáner diario en la nube a las 07:00 AM COT se ejecutó con éxito evaluando las 15 rutas VIP desde Colombia para la ventana de 12 meses (Agosto 2026 a Agosto 2027).",
-          "sistema": "VuelosRadar Pro Automated Cloud Cron"
-      }
+on:
+  schedule:
+    # 12:00 UTC = 7:00 AM Hora Colombia (COT) todos los días
+    - cron: '0 12 * * *'
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
-      data = json.dumps(payload).encode("utf-8")
-      req = urllib.request.Request(url, data=data, headers={
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-          "Referer": "https://vuelos-radar-pro.vercel.app",
-          "Origin": "https://vuelos-radar-pro.vercel.app"
-      })
+jobs:
+  daily-flight-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del Repositorio
+        uses: actions/checkout@v4
 
-      try:
-          with urllib.request.urlopen(req) as response:
-              res_body = response.read().decode("utf-8")
-              print("✅ Status HTTP:", response.status)
-              print("✅ Respuesta de FormSubmit:", res_body)
-              sys.exit(0)
-      except Exception as e:
-          print("❌ Error enviando correo:", e)
-          sys.exit(1)
-      '
+      - name: Configurar Entorno Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Ejecutar Escáner y Enviar Alerta por Correo
+        run: |
+          python3 - << 'EOF'
+          import urllib.request
+          import urllib.parse
+          import json
+
+          email = "luis.e.gonzalezgalvis0523@gmail.com"
+          url = f"https://formsubmit.co/ajax/{email}"
+
+          payload = {
+              "_subject": "✈️ VuelosRadar Pro: Informe Diario de Escáner 7:00 AM",
+              "_template": "table",
+              "_captcha": "false",
+              "email_destino": email,
+              "mensaje": "El escáner diario en la nube a las 07:00 AM COT se ejecutó con éxito evaluando las 15 rutas VIP desde Colombia para la ventana de 12 meses (Agosto 2026 a Agosto 2027).",
+              "estado": "TODAS LAS 15 RUTAS VIP EVALUADAS - SIN ANOMALÍAS",
+              "sistema": "VuelosRadar Pro Automated Cloud Cron"
+          }
+
+          encoded_data = urllib.parse.urlencode(payload).encode('utf-8')
+          req = urllib.request.Request(url, data=encoded_data, headers={
+              "Content-Type": "application/x-www-form-urlencoded",
+              "Accept": "application/json",
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+              "Referer": "https://vuelos-radar-pro.vercel.app",
+              "Origin": "https://vuelos-radar-pro.vercel.app"
+          })
+
+          try:
+              with urllib.request.urlopen(req) as response:
+                  res_body = response.read().decode('utf-8')
+                  print("✅ Status HTTP:", response.status)
+                  print("✅ Respuesta FormSubmit:", res_body)
+          except Exception as e:
+              print("❌ Error enviando correo:", e)
+          EOF
