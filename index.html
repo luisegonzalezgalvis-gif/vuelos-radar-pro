@@ -83,8 +83,8 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
-    // Clave de almacenamiento v14 para refrescar caché y solucionar buildGoogleFlightsUrl
-    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v14_storage";
+    // Clave de almacenamiento v15 para activar alerta de tiquetes separados Wingo (BGA-MDE + MDE-PTY)
+    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v15_storage";
 
     // Función auxiliar global para construir URLs directas de Google Flights (Definida en scope superior)
     function buildGoogleFlightsUrl(originCode, destCode, departureDateStr, returnDateStr) {
@@ -207,10 +207,15 @@
         directFlight: false,
         airline: 'Wingo (vía MDE) / Avianca / Copa',
         airlineNote: 'Wingo con escala en Medellín (MDE) desde $1.332.275 COP. Avianca (1 escala BOG): $1.591.480 COP. Copa Directo: $2.257.270 COP',
-        isSeparateTickets: false,
+        isSeparateTickets: true,
+        separateTicketWarning: '⚠️ COMPRA POR SEPARADO EN WINGO: Wingo no vende BGA-PTY en un solo pasaje. Para los $1.332.275 COP debes comprar 2 tiquetes en Wingo: 1) BGA ➔ MDE y 2) MDE ➔ PTY. Si prefieres un solo pasaje sin cambiar maletas, elige Avianca ($1.59M) o Copa ($2.25M).',
         alertOnBreak: true,
         promoSource: 'Wingo (Oficial)',
-        promoUrl: 'https://www.wingo.com/'
+        promoUrl: 'https://www.wingo.com/',
+        secondaryLinks: [
+          { name: 'Google Flights (Tiquete Único)', url: 'https://www.google.com/travel/flights?q=Flights+from+BGA+to+PTY+on+2026-10-05+through+2026-10-12' },
+          { name: 'Avianca ($1.591.480)', url: 'https://www.avianca.com/es/' }
+        ]
       },
       {
         id: 'vip-4',
@@ -516,9 +521,10 @@
         departureDate: '2026-10-05',
         returnDate: '2026-10-12',
         datesFormatted: '05 Octubre - 12 Octubre 2026',
-        route: 'Bucaramanga -> Medellín (Escala 7h 10m) -> Panamá (PTY)',
-        layoverNote: 'Tarifa confirmada en Wingo Oficial por $1.332.275 COP',
-        isSeparateTickets: false,
+        route: 'Tramo 1: BGA ➔ MDE | Tramo 2: MDE ➔ PTY (Conexión MDE)',
+        layoverNote: 'Wingo es aerolínea punto a punto. Requiere comprar 2 tiquetes por separado en Wingo.',
+        isSeparateTickets: true,
+        separateTicketWarning: '⚠️ COMPRA POR SEPARADO EN WINGO: Debes hacer 2 compras independientes en la web de Wingo: 1) Bucaramanga a Medellín (MDE) y 2) Medellín a Panamá (PTY). Si prefieres comprar 1 solo tiquete integrado, usa Avianca ($1.59M) o Copa ($2.25M).',
         isNewRecord: true,
         promoSource: 'Wingo (Oficial)',
         promoUrl: 'https://www.wingo.com/'
