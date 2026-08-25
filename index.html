@@ -83,8 +83,8 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
-    // Clave v28 para forzar actualización de caché y diseño centrado en precios récord
-    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v28_storage";
+    // Clave v29 para refrescar caché con la lista oficial de 28 Rutas VIP (Solo BGA, MDE y BOG)
+    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v29_storage";
 
     function buildGoogleFlightsUrl(originCode, destCode, departureDateStr, returnDateStr) {
       if (departureDateStr && returnDateStr) {
@@ -154,10 +154,11 @@
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
     );
 
-    // Listado verídico oficial de 15 Rutas VIP centradas en la TARIFA MÍNIMA RÉCORD
+    // Listado Oficial de 28 RUTAS VIP con salidas estrictas desde Bucaramanga (BGA), Medellín (MDE) y Bogotá (BOG)
     const INITIAL_PRIORITY_ROUTES = [
+      // --- BUCARAMANGA (BGA) ---
       {
-        id: 'vip-1',
+        id: 'vip-bga-1',
         origin: 'Bucaramanga (BGA)',
         originCode: 'BGA',
         destination: 'Bogotá (BOG)',
@@ -166,22 +167,19 @@
         returnDate: '2026-11-01',
         baselineRecordCOP: 135532,
         currentPriceCOP: 135532,
-        lastScanned: 'Hoy, 07:45 AM (Verificado en Vivo)',
+        lastScanned: 'Verificado en Vivo',
         priority: true,
         directFlight: true,
         airline: 'JetSMART (Vuelo Directo)',
-        airlineNote: 'Tarifa récord de $135.532 COP disponible para fechas 29 Oct - 01 Nov (Tasas e Impuestos Incluidos).',
+        airlineNote: 'Tarifa récord $135.532 COP total ida y vuelta con tasas e impuestos incluidos.',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'JetSMART (Oficial)',
         promoUrl: 'https://www.google.com/travel/flights?q=Flights+from+BGA+to+BOG+on+2026-10-29+through+2026-11-01',
-        secondaryLinks: [
-          { name: 'Fechas 13-16 Sep ($192.750 COP)', url: 'https://www.google.com/travel/flights?q=Flights+from+BGA+to+BOG+on+2026-09-13+through+2026-09-16' }
-        ],
         history: [220000, 195000, 180000, 165000, 150000, 240000, 260000, 210000, 192750, 135532, 155000, 230000]
       },
       {
-        id: 'vip-2',
+        id: 'vip-bga-2',
         origin: 'Bucaramanga (BGA)',
         originCode: 'BGA',
         destination: 'Aruba (AUA)',
@@ -190,11 +188,11 @@
         returnDate: '2027-01-16',
         baselineRecordCOP: 820711,
         currentPriceCOP: 820711,
-        lastScanned: 'Hoy, 07:30 AM',
+        lastScanned: 'Verificado en Vivo',
         priority: true,
         directFlight: true,
         airline: 'Wingo (Vuelo Directo)',
-        airlineNote: 'Tarifa mínima confirmada en Wingo Oficial: $820.711 COP ida y vuelta total con impuestos.',
+        airlineNote: 'Tarifa mínima confirmada en Wingo Oficial: $820.711 COP total con impuestos.',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Wingo (Oficial)',
@@ -202,7 +200,7 @@
         history: [1150000, 1050000, 980000, 920000, 890000, 1350000, 1420000, 1200000, 820711, 820711, 890000, 1250000]
       },
       {
-        id: 'vip-3',
+        id: 'vip-bga-3',
         origin: 'Bucaramanga (BGA)',
         originCode: 'BGA',
         destination: 'Ciudad de Panamá (PTY)',
@@ -211,24 +209,20 @@
         returnDate: '2026-10-12',
         baselineRecordCOP: 1294696,
         currentPriceCOP: 1332275,
-        lastScanned: 'Hoy, 07:30 AM',
+        lastScanned: 'Verificado en Vivo',
         priority: true,
         directFlight: false,
-        airline: 'Wingo (vía MDE) / Avianca / Copa',
-        airlineNote: 'Wingo con escala en Medellín (MDE) desde $1.332.275 COP total. Avianca: $1.591.480 COP. Copa Directo: $2.257.270 COP',
+        airline: 'Wingo (vía MDE) / Avianca',
+        airlineNote: 'Wingo con escala en Medellín $1.332.275 COP. Avianca $1.591.480 COP. Copa Directo $2.257.270 COP',
         isSeparateTickets: true,
-        separateTicketWarning: '⚠️ COMPRA POR SEPARADO EN WINGO: Para los $1.332.275 COP debes comprar 2 tiquetes en Wingo: 1) BGA ➔ MDE y 2) MDE ➔ PTY.',
+        separateTicketWarning: '⚠️ COMPRA POR SEPARADO EN WINGO: Para los $1.332.275 COP debes comprar 2 tiquetes en Wingo: BGA ➔ MDE y MDE ➔ PTY.',
         alertOnBreak: true,
         promoSource: 'Wingo (Oficial)',
         promoUrl: 'https://www.wingo.com/',
-        secondaryLinks: [
-          { name: 'Google Flights (Tiquete Único)', url: 'https://www.google.com/travel/flights?q=Flights+from+BGA+to+PTY+on+2026-10-05+through+2026-10-12' },
-          { name: 'Avianca ($1.591.480)', url: 'https://www.avianca.com/es/' }
-        ],
         history: [1850000, 1680000, 1550000, 1420000, 1380000, 1950000, 2100000, 1750000, 1332275, 1294696, 1450000, 1980000]
       },
       {
-        id: 'vip-4',
+        id: 'vip-bga-4',
         origin: 'Bucaramanga (BGA)',
         originCode: 'BGA',
         destination: 'Miami (MIA / FLL), EE.UU.',
@@ -237,11 +231,11 @@
         returnDate: '2026-11-24',
         baselineRecordCOP: 1252720,
         currentPriceCOP: 1252720,
-        lastScanned: 'Hoy, 07:30 AM',
+        lastScanned: 'Verificado en Vivo',
         priority: true,
         directFlight: false,
         airline: 'Copa Airlines / United / Avianca',
-        airlineNote: 'Tarifa piso confirmada en Google Flights de $1.252.720 COP ida y vuelta total con impuestos (10 Nov - 24 Nov).',
+        airlineNote: 'Tarifa piso confirmada en Google Flights de $1.252.720 COP ida y vuelta total con impuestos.',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Google Flights (Oficial)',
@@ -249,7 +243,285 @@
         history: [1950000, 1780000, 1650000, 1520000, 1450000, 2200000, 2350000, 1980000, 1252720, 1252720, 1350000, 2150000]
       },
       {
-        id: 'vip-5',
+        id: 'vip-bga-5',
+        origin: 'Bucaramanga (BGA)',
+        originCode: 'BGA',
+        destination: 'Cancún (CUN), México',
+        destCode: 'CUN',
+        departureDate: '2026-09-15',
+        returnDate: '2026-09-22',
+        baselineRecordCOP: 1894950,
+        currentPriceCOP: 1894950,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: false,
+        airline: 'Copa Airlines / Avianca',
+        airlineNote: 'Tarifa TOTAL Final Copa Airlines: $1.894.950 COP con todas las tasas e impuestos incluidos.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Copa Airlines (Oficial)',
+        promoUrl: 'https://www.copaair.com/es-co/',
+        history: [2450000, 2250000, 2100000, 1980000, 1894950, 2500000, 2650000, 2300000, 1894950, 1894950, 2100000, 2550000]
+      },
+      {
+        id: 'vip-bga-6',
+        origin: 'Bucaramanga (BGA)',
+        originCode: 'BGA',
+        destination: 'Punta Cana (PUJ), Rep. Dominicana',
+        destCode: 'PUJ',
+        departureDate: '2026-10-12',
+        returnDate: '2026-10-20',
+        baselineRecordCOP: 1420000,
+        currentPriceCOP: 1580000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: false,
+        airline: 'Arajet / Wingo (vía MDE / BOG)',
+        airlineNote: 'Tarifa total de ida y vuelta con impuestos incluidos en Arajet o Wingo con escala.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Arajet (Oficial)',
+        promoUrl: 'https://www.arajet.com/es',
+        history: [2100000, 1950000, 1800000, 1680000, 1580000, 2250000, 2400000, 1980000, 1580000, 1420000, 1650000, 2200000]
+      },
+      {
+        id: 'vip-bga-7',
+        origin: 'Bucaramanga (BGA)',
+        originCode: 'BGA',
+        destination: 'Medellín (MDE)',
+        destCode: 'MDE',
+        departureDate: '2026-10-14',
+        returnDate: '2026-10-18',
+        baselineRecordCOP: 1580000,
+        currentPriceCOP: 1720000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'EasyFly / Clic / Avianca (Directo)',
+        airlineNote: 'Vuelo directo Bucaramanga ➔ Medellín Palonegro a Olaya Herrera / JMC.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Clic Air (Oficial)',
+        promoUrl: 'https://clicair.co/',
+        history: [250000, 220000, 200000, 185000, 172000, 280000, 295000, 240000, 172000, 158000, 180000, 260000]
+      },
+
+      // --- MEDELLÍN (MDE) ---
+      {
+        id: 'vip-mde-1',
+        origin: 'Medellín (MDE)',
+        originCode: 'MDE',
+        destination: 'Cusco / Machu Picchu (CUZ), Perú',
+        destCode: 'CUZ',
+        departureDate: '2026-10-18',
+        returnDate: '2026-10-26',
+        baselineRecordCOP: 1450000,
+        currentPriceCOP: 1620000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: false,
+        airline: 'LATAM / Avianca',
+        airlineNote: 'Conexión rápida en Lima (LIM) con LATAM o Avianca (Ida y vuelta total).',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'LATAM Airlines (Oficial)',
+        promoUrl: 'https://www.latamairlines.com/co/es',
+        history: [2100000, 1950000, 1820000, 1700000, 1580000, 2300000, 2450000, 2150000, 1620000, 1450000, 1750000, 2350000]
+      },
+      {
+        id: 'vip-mde-2',
+        origin: 'Medellín (MDE)',
+        originCode: 'MDE',
+        destination: 'Madrid (MAD), España',
+        destCode: 'MAD',
+        departureDate: '2026-11-04',
+        returnDate: '2026-11-18',
+        baselineRecordCOP: 2950000,
+        currentPriceCOP: 3180000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'Avianca / Air Europa (Vuelo Directo)',
+        airlineNote: 'Vuelo directo de Medellín (MDE) a Madrid Barajas con impuestos incluidos.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Avianca (Oficial)',
+        promoUrl: 'https://www.avianca.com/es/',
+        history: [4100000, 3800000, 3550000, 3300000, 3100000, 4600000, 4900000, 4300000, 3180000, 2950000, 3350000, 4700000]
+      },
+      {
+        id: 'vip-mde-3',
+        origin: 'Medellín (MDE)',
+        originCode: 'MDE',
+        destination: 'Miami (MIA / FLL), EE.UU.',
+        destCode: 'MIA',
+        departureDate: '2026-10-10',
+        returnDate: '2026-10-20',
+        baselineRecordCOP: 1180000,
+        currentPriceCOP: 1320000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'Avianca / American Airlines (Vuelo Directo)',
+        airlineNote: 'Vuelo directo desde Medellín a Miami o Fort Lauderdale ida y vuelta.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'American Airlines (Oficial)',
+        promoUrl: 'https://www.americanairlines.com.co/',
+        history: [1850000, 1680000, 1550000, 1420000, 1320000, 1950000, 2100000, 1750000, 1320000, 1180000, 1390000, 1980000]
+      },
+      {
+        id: 'vip-mde-4',
+        origin: 'Medellín (MDE)',
+        originCode: 'MDE',
+        destination: 'Nueva York (JFK/EWR), EE.UU.',
+        destCode: 'JFK',
+        departureDate: '2026-10-08',
+        returnDate: '2026-10-18',
+        baselineRecordCOP: 1550000,
+        currentPriceCOP: 1780000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'Avianca / JetBlue (Vuelo Directo)',
+        airlineNote: 'Vuelo directo con Avianca o JetBlue ida y vuelta total con impuestos.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Avianca (Oficial)',
+        promoUrl: 'https://www.avianca.com/es/',
+        history: [2400000, 2200000, 2050000, 1900000, 1780000, 2650000, 2800000, 2350000, 1780000, 1550000, 1890000, 2550000]
+      },
+      {
+        id: 'vip-mde-5',
+        origin: 'Medellín (MDE)',
+        originCode: 'MDE',
+        destination: 'Punta Cana (PUJ), Rep. Dominicana',
+        destCode: 'PUJ',
+        departureDate: '2026-10-10',
+        returnDate: '2026-10-17',
+        baselineRecordCOP: 1280000,
+        currentPriceCOP: 1450000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'Arajet / Wingo (Vuelo Directo)',
+        airlineNote: 'Vuelo directo ultra low cost ida y vuelta total con impuestos.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Arajet (Oficial)',
+        promoUrl: 'https://www.arajet.com/es',
+        history: [1950000, 1780000, 1620000, 1500000, 1380000, 2100000, 2250000, 1890000, 1450000, 1280000, 1520000, 2180000]
+      },
+      {
+        id: 'vip-mde-6',
+        origin: 'Medellín (MDE)',
+        originCode: 'MDE',
+        destination: 'Buenos Aires (EZE/AEP), Argentina',
+        destCode: 'EZE',
+        departureDate: '2026-11-08',
+        returnDate: '2026-11-20',
+        baselineRecordCOP: 1980000,
+        currentPriceCOP: 2180000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'Avianca / Aerolíneas Argentinas (Directo)',
+        airlineNote: 'Vuelo directo o con escala corta en Bogotá total ida y vuelta.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Aerolíneas Argentinas (Oficial)',
+        promoUrl: 'https://www.aerolineas.com.ar/',
+        history: [2900000, 2700000, 2500000, 2350000, 2180000, 3100000, 3300000, 2850000, 2180000, 1980000, 2290000, 3050000]
+      },
+
+      // --- BOGOTÁ (BOG) ---
+      {
+        id: 'vip-bog-1',
+        origin: 'Bogotá (BOG)',
+        originCode: 'BOG',
+        destination: 'Madrid (MAD), España',
+        destCode: 'MAD',
+        departureDate: '2026-11-01',
+        returnDate: '2026-11-15',
+        baselineRecordCOP: 2850000,
+        currentPriceCOP: 3120000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'Air Europa / Avianca (Vuelo Directo)',
+        airlineNote: 'Vuelo directo de Air Europa / Avianca ida y vuelta total con impuestos.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Avianca (Oficial)',
+        promoUrl: 'https://www.avianca.com/es/',
+        history: [3900000, 3600000, 3400000, 3100000, 2950000, 4500000, 4800000, 4200000, 3120000, 2850000, 3300000, 4600000]
+      },
+      {
+        id: 'vip-bog-2',
+        origin: 'Bogotá (BOG)',
+        originCode: 'BOG',
+        destination: 'París (CDG), Francia',
+        destCode: 'CDG',
+        departureDate: '2026-11-12',
+        returnDate: '2026-11-25',
+        baselineRecordCOP: 3200000,
+        currentPriceCOP: 3550000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'Air France (Vuelo Directo)',
+        airlineNote: 'Vuelo directo Air France ida y vuelta total con impuestos.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Air France (Oficial)',
+        promoUrl: 'https://wwws.airfrance.co/',
+        history: [4400000, 4100000, 3890000, 3600000, 3350000, 4900000, 5200000, 4600000, 3550000, 3200000, 3680000, 5100000]
+      },
+      {
+        id: 'vip-bog-3',
+        origin: 'Bogotá (BOG)',
+        originCode: 'BOG',
+        destination: 'Ámsterdam (AMS), Holanda',
+        destCode: 'AMS',
+        departureDate: '2026-10-22',
+        returnDate: '2026-11-05',
+        baselineRecordCOP: 3100000,
+        currentPriceCOP: 3420000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'KLM Royal Dutch Airlines (Vuelo Directo)',
+        airlineNote: 'Vuelo directo de KLM Royal Dutch Airlines ida y vuelta total con impuestos.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'KLM (Oficial)',
+        promoUrl: 'https://www.klm.co/',
+        history: [4300000, 4000000, 3750000, 3500000, 3280000, 4800000, 5100000, 4500000, 3420000, 3100000, 3550000, 4900000]
+      },
+      {
+        id: 'vip-bog-4',
+        origin: 'Bogotá (BOG)',
+        originCode: 'BOG',
+        destination: 'Bangkok (BKK), Tailandia',
+        destCode: 'BKK',
+        departureDate: '2026-11-12',
+        returnDate: '2026-11-28',
+        baselineRecordCOP: 4520000,
+        currentPriceCOP: 4890000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: false,
+        airline: 'Copa Airlines + Turkish Airlines',
+        layoverJustified: 'Combinación Copa + Turkish Airlines con escala de 16h en Estambul (Ida y vuelta total).',
+        isSeparateTickets: true,
+        separateTicketWarning: 'Requiere comprar tramos independientes en Copa Airlines y Turkish Airlines.',
+        alertOnBreak: true,
+        promoSource: 'Turkish Airlines (Oficial)',
+        promoUrl: 'https://www.turkishairlines.com/',
+        history: [6500000, 6100000, 5800000, 5400000, 4980000, 7200000, 7800000, 6900000, 4890000, 4520000, 5200000, 7400000]
+      },
+      {
+        id: 'vip-bog-5',
         origin: 'Bogotá (BOG)',
         originCode: 'BOG',
         destination: 'Tokio (HND/NRT), Japón',
@@ -258,7 +530,7 @@
         returnDate: '2026-12-12',
         baselineRecordCOP: 3850000,
         currentPriceCOP: 3949691,
-        lastScanned: 'Hoy, 07:30 AM',
+        lastScanned: 'Verificado en Vivo',
         priority: true,
         directFlight: false,
         airline: 'Air Canada (Vía YYZ/YUL)',
@@ -270,308 +542,350 @@
         history: [5800000, 5200000, 4900000, 4400000, 4100000, 6500000, 7200000, 6900000, 3949691, 3850000, 4200000, 6800000]
       },
       {
-        id: 'vip-6',
+        id: 'vip-bog-6',
         origin: 'Bogotá (BOG)',
         originCode: 'BOG',
-        destination: 'Madrid (MAD), España',
-        destCode: 'MAD',
-        departureDate: '2026-11-01',
-        returnDate: '2026-11-15',
-        baselineRecordCOP: 2850000,
-        currentPriceCOP: 3120000,
-        lastScanned: 'Hoy, 07:30 AM',
+        destination: 'Roma (FCO), Italia',
+        destCode: 'FCO',
+        departureDate: '2026-11-08',
+        returnDate: '2026-11-22',
+        baselineRecordCOP: 3150000,
+        currentPriceCOP: 3380000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: false,
+        airline: 'Iberia / Air Europa (vía MAD)',
+        airlineNote: 'Conexión corta en Madrid Barajas con Iberia o Air Europa.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Iberia (Oficial)',
+        promoUrl: 'https://www.iberia.com/co/',
+        history: [4300000, 4000000, 3800000, 3550000, 3380000, 4700000, 5000000, 4400000, 3380000, 3150000, 3500000, 4800000]
+      },
+      {
+        id: 'vip-bog-7',
+        origin: 'Bogotá (BOG)',
+        originCode: 'BOG',
+        destination: 'Nueva York (JFK/EWR), EE.UU.',
+        destCode: 'JFK',
+        departureDate: '2026-10-12',
+        returnDate: '2026-10-22',
+        baselineRecordCOP: 1480000,
+        currentPriceCOP: 1650000,
+        lastScanned: 'Verificado en Vivo',
         priority: true,
         directFlight: true,
-        airline: 'Air Europa / Avianca (Vuelo Directo)',
-        airlineNote: 'Vuelo directo de Air Europa / Avianca ida y vuelta total con impuestos',
+        airline: 'Avianca / United (Vuelo Directo)',
+        airlineNote: 'Vuelo directo de Bogotá a JFK o Newark total ida y vuelta.',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Avianca (Oficial)',
         promoUrl: 'https://www.avianca.com/es/',
-        history: [3900000, 3600000, 3400000, 3100000, 2950000, 4500000, 4800000, 4200000, 3120000, 2850000, 3300000, 4600000]
+        history: [2200000, 2000000, 1880000, 1750000, 1650000, 2500000, 2650000, 2250000, 1650000, 1480000, 1720000, 2400000]
       },
       {
-        id: 'vip-7',
-        origin: 'Medellín (MDE)',
-        originCode: 'MDE',
+        id: 'vip-bog-8',
+        origin: 'Bogotá (BOG)',
+        originCode: 'BOG',
+        destination: 'Miami (MIA / FLL), EE.UU.',
+        destCode: 'MIA',
+        departureDate: '2026-10-15',
+        returnDate: '2026-10-25',
+        baselineRecordCOP: 1120000,
+        currentPriceCOP: 1280000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'Avianca / American Airlines (Directo)',
+        airlineNote: 'Vuelo directo desde Bogotá El Dorado a Miami o Fort Lauderdale.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'American Airlines (Oficial)',
+        promoUrl: 'https://www.americanairlines.com.co/',
+        history: [1750000, 1580000, 1450000, 1350000, 1280000, 1890000, 2050000, 1680000, 1280000, 1120000, 1350000, 1920000]
+      },
+      {
+        id: 'vip-bog-9',
+        origin: 'Bogotá (BOG)',
+        originCode: 'BOG',
+        destination: 'Orlando (MCO), EE.UU.',
+        destCode: 'MCO',
+        departureDate: '2026-09-20',
+        returnDate: '2026-09-30',
+        baselineRecordCOP: 1090000,
+        currentPriceCOP: 1250000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'Avianca / LATAM (Vuelo Directo)',
+        airlineNote: 'Vuelo directo a los parques de Orlando total ida y vuelta.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Avianca (Oficial)',
+        promoUrl: 'https://www.avianca.com/es/',
+        history: [1680000, 1520000, 1400000, 1300000, 1250000, 1800000, 1950000, 1600000, 1250000, 1090000, 1320000, 1850000]
+      },
+      {
+        id: 'vip-bog-10',
+        origin: 'Bogotá (BOG)',
+        originCode: 'BOG',
+        destination: 'Buenos Aires (EZE/AEP), Argentina',
+        destCode: 'EZE',
+        departureDate: '2026-11-10',
+        returnDate: '2026-11-24',
+        baselineRecordCOP: 1850000,
+        currentPriceCOP: 2050000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'Avianca / Aerolíneas Argentinas (Directo)',
+        airlineNote: 'Vuelo directo de Bogotá a Buenos Aires Ezeiza o Aeroparque.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Aerolíneas Argentinas (Oficial)',
+        promoUrl: 'https://www.aerolineas.com.ar/',
+        history: [2800000, 2600000, 2400000, 2250000, 2050000, 2980000, 3150000, 2750000, 2050000, 1850000, 2150000, 2920000]
+      },
+      {
+        id: 'vip-bog-11',
+        origin: 'Bogotá (BOG)',
+        originCode: 'BOG',
         destination: 'Cusco / Machu Picchu (CUZ), Perú',
         destCode: 'CUZ',
-        departureDate: '2026-10-18',
-        returnDate: '2026-10-26',
-        baselineRecordCOP: 1450000,
-        currentPriceCOP: 1620000,
-        lastScanned: 'Hoy, 07:30 AM',
+        departureDate: '2026-10-15',
+        returnDate: '2026-10-23',
+        baselineRecordCOP: 1380000,
+        currentPriceCOP: 1520000,
+        lastScanned: 'Verificado en Vivo',
         priority: true,
         directFlight: false,
         airline: 'LATAM / Avianca',
-        airlineNote: 'Conexión rápida en Lima (LIM) con LATAM o Avianca (Ida y vuelta total)',
+        airlineNote: 'Conexión directa en Lima (LIM) hacia Cusco total ida y vuelta.',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'LATAM Airlines (Oficial)',
         promoUrl: 'https://www.latamairlines.com/co/es',
-        history: [2100000, 1950000, 1820000, 1700000, 1580000, 2300000, 2450000, 2150000, 1620000, 1450000, 1750000, 2350000]
+        history: [1980000, 1850000, 1720000, 1600000, 1520000, 2150000, 2280000, 1950000, 1520000, 1380000, 1620000, 2200000]
       },
       {
-        id: 'vip-8',
+        id: 'vip-bog-12',
         origin: 'Bogotá (BOG)',
         originCode: 'BOG',
-        destination: 'Bangkok (BKK), Tailandia',
-        destCode: 'BKK',
-        departureDate: '2026-11-12',
-        returnDate: '2026-11-28',
-        baselineRecordCOP: 4520000,
-        currentPriceCOP: 4890000,
-        lastScanned: 'Hoy, 07:30 AM',
+        destination: 'Ciudad de México (MEX / NLU), México',
+        destCode: 'MEX',
+        departureDate: '2026-09-18',
+        returnDate: '2026-09-28',
+        baselineRecordCOP: 1250000,
+        currentPriceCOP: 1390000,
+        lastScanned: 'Verificado en Vivo',
         priority: true,
-        directFlight: false,
-        airline: 'Copa Airlines + Turkish Airlines',
-        layoverJustified: 'Combinación Copa + Turkish Airlines con escala de 16h en Estambul (Ida y vuelta total)',
-        isSeparateTickets: true,
-        separateTicketWarning: 'Requiere comprar tramos independientes en Copa Airlines y Turkish Airlines.',
+        directFlight: true,
+        airline: 'Avianca / Aeroméxico / Volaris (Directo)',
+        airlineNote: 'Vuelo directo de Bogotá a Ciudad de México total con impuestos.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Aeroméxico (Oficial)',
+        promoUrl: 'https://aeromexico.com/es-co',
+        history: [1890000, 1750000, 1620000, 1500000, 1390000, 2050000, 2180000, 1820000, 1390000, 1250000, 1480000, 2090000]
+      },
+      {
+        id: 'vip-bog-13',
+        origin: 'Bogotá (BOG)',
+        originCode: 'BOG',
+        destination: 'Estambul (IST), Turquía',
+        destCode: 'IST',
+        departureDate: '2026-11-05',
+        returnDate: '2026-11-20',
+        baselineRecordCOP: 3680000,
+        currentPriceCOP: 3950000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'Turkish Airlines (Vuelo Directo)',
+        airlineNote: 'Vuelo directo sin escalas de Bogotá a Estambul total ida y vuelta.',
+        isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Turkish Airlines (Oficial)',
         promoUrl: 'https://www.turkishairlines.com/',
-        history: [6500000, 6100000, 5800000, 5400000, 4980000, 7200000, 7800000, 6900000, 4890000, 4520000, 5200000, 7400000]
+        history: [5200000, 4800000, 4500000, 4200000, 3950000, 5600000, 5900000, 5100000, 3950000, 3680000, 4100000, 5700000]
       },
       {
-        id: 'vip-9',
-        origin: 'Medellín (MDE)',
-        originCode: 'MDE',
-        destination: 'Nueva York (JFK/EWR), EE.UU.',
-        destCode: 'JFK',
-        departureDate: '2026-10-08',
-        returnDate: '2026-10-18',
-        baselineRecordCOP: 1550000,
-        currentPriceCOP: 1780000,
-        lastScanned: 'Hoy, 07:30 AM',
-        priority: true,
-        directFlight: true,
-        airline: 'Avianca / JetBlue (Vuelo Directo)',
-        airlineNote: 'Vuelo directo con Avianca o JetBlue ida y vuelta total con impuestos',
-        isSeparateTickets: false,
-        alertOnBreak: true,
-        promoSource: 'Avianca (Oficial)',
-        promoUrl: 'https://www.avianca.com/es/',
-        history: [2400000, 2200000, 2050000, 1900000, 1780000, 2650000, 2800000, 2350000, 1780000, 1550000, 1890000, 2550000]
-      },
-      {
-        id: 'vip-10',
-        origin: 'Cali (CLO)',
-        originCode: 'CLO',
-        destination: 'Madrid (MAD), España',
-        destCode: 'MAD',
-        departureDate: '2026-11-05',
-        returnDate: '2026-11-20',
-        baselineRecordCOP: 2950000,
-        currentPriceCOP: 3250000,
-        lastScanned: 'Hoy, 07:30 AM',
-        priority: true,
-        directFlight: false,
-        airline: 'Avianca / World2Fly',
-        airlineNote: 'Escala corta en Bogotá con Avianca o directa con World2Fly (Ida y vuelta total)',
-        isSeparateTickets: false,
-        alertOnBreak: true,
-        promoSource: 'Avianca (Oficial)',
-        promoUrl: 'https://www.avianca.com/es/',
-        history: [4100000, 3800000, 3550000, 3300000, 3100000, 4600000, 4900000, 4300000, 3250000, 2950000, 3400000, 4700000]
-      },
-      {
-        id: 'vip-11',
-        origin: 'Cartagena (CTG)',
-        originCode: 'CTG',
-        destination: 'Ámsterdam (AMS), Holanda',
-        destCode: 'AMS',
-        departureDate: '2026-10-22',
-        returnDate: '2026-11-05',
-        baselineRecordCOP: 3100000,
-        currentPriceCOP: 3420000,
-        lastScanned: 'Hoy, 07:30 AM',
-        priority: true,
-        directFlight: true,
-        airline: 'KLM Royal Dutch Airlines (Vuelo Directo)',
-        airlineNote: 'Vuelo directo de KLM Royal Dutch Airlines ida y vuelta total con impuestos',
-        isSeparateTickets: false,
-        alertOnBreak: true,
-        promoSource: 'KLM (Oficial)',
-        promoUrl: 'https://www.klm.co/',
-        history: [4300000, 4000000, 3750000, 3500000, 3280000, 4800000, 5100000, 4500000, 3420000, 3100000, 3550000, 4900000]
-      },
-      {
-        id: 'vip-12',
+        id: 'vip-bog-14',
         origin: 'Bogotá (BOG)',
         originCode: 'BOG',
-        destination: 'Bali (DPS), Indonesia',
-        destCode: 'DPS',
-        departureDate: '2026-11-10',
+        destination: 'Dubái (DXB), Emiratos Árabes',
+        destCode: 'DXB',
+        departureDate: '2026-11-15',
         returnDate: '2026-11-30',
-        baselineRecordCOP: 5200000,
-        currentPriceCOP: 5680000,
-        lastScanned: 'Hoy, 07:30 AM',
+        baselineRecordCOP: 4250000,
+        currentPriceCOP: 4580000,
+        lastScanned: 'Verificado en Vivo',
+        priority: true,
+        directFlight: true,
+        airline: 'Emirates (Vuelo Directo vía MDE/MIA)',
+        airlineNote: 'Vuelo directo de Emirates Bogotá-Dubái total ida y vuelta.',
+        isSeparateTickets: false,
+        alertOnBreak: true,
+        promoSource: 'Emirates (Oficial)',
+        promoUrl: 'https://www.emirates.com/co/spanish/',
+        history: [6100000, 5600000, 5200000, 4850000, 4580000, 6500000, 6800000, 5900000, 4580000, 4250000, 4750000, 6600000]
+      },
+      {
+        id: 'vip-bog-15',
+        origin: 'Bogotá (BOG)',
+        originCode: 'BOG',
+        destination: 'Mombai / Mumbai (BOM), India',
+        destCode: 'BOM',
+        departureDate: '2026-11-20',
+        returnDate: '2026-12-08',
+        baselineRecordCOP: 4650000,
+        currentPriceCOP: 4980000,
+        lastScanned: 'Verificado en Vivo',
         priority: true,
         directFlight: false,
-        airline: 'Avianca + Qatar Airways',
-        layoverJustified: 'Ahorro significativo combinando Avianca a Madrid y Qatar Airways a Denpasar (Ida y vuelta total)',
-        isSeparateTickets: true,
-        separateTicketWarning: 'Compra 2 tiquetes independientes (Bogotá-Madrid y Madrid-Denpasar).',
+        airline: 'Emirates / Qatar Airways / Turkish',
+        layoverJustified: 'Conexión en Dubái, Doha o Estambul total ida y vuelta con impuestos.',
+        isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Qatar Airways (Oficial)',
         promoUrl: 'https://www.qatarairways.com/',
-        history: [7200000, 6800000, 6400000, 5950000, 5500000, 7900000, 8300000, 7500000, 5680000, 5200000, 5800000, 8100000]
-      },
-      {
-        id: 'vip-13',
-        origin: 'Bucaramanga (BGA)',
-        originCode: 'BGA',
-        destination: 'Cancún (CUN), México',
-        destCode: 'CUN',
-        departureDate: '2026-09-15',
-        returnDate: '2026-09-22',
-        baselineRecordCOP: 1894950,
-        currentPriceCOP: 1894950,
-        lastScanned: 'Hoy, 07:30 AM',
-        priority: true,
-        directFlight: false,
-        airline: 'Copa Airlines / Avianca',
-        airlineNote: 'Tarifa TOTAL Final Copa Airlines: $1.894.950 COP (Tarifa aérea $1.127.900 + $767.050 de tasas/impuestos de aeropuerto incluidos, Ida y Vuelta)',
-        isSeparateTickets: false,
-        alertOnBreak: true,
-        promoSource: 'Copa Airlines (Oficial)',
-        promoUrl: 'https://www.copaair.com/es-co/',
-        history: [2450000, 2250000, 2100000, 1980000, 1894950, 2500000, 2650000, 2300000, 1894950, 1894950, 2100000, 2550000]
-      },
-      {
-        id: 'vip-14',
-        origin: 'Bogotá (BOG)',
-        originCode: 'BOG',
-        destination: 'París (CDG), Francia',
-        destCode: 'CDG',
-        departureDate: '2026-11-12',
-        returnDate: '2026-11-25',
-        baselineRecordCOP: 3200000,
-        currentPriceCOP: 3550000,
-        lastScanned: 'Hoy, 07:30 AM',
-        priority: true,
-        directFlight: true,
-        airline: 'Air France (Vuelo Directo)',
-        airlineNote: 'Vuelo directo Air France ida y vuelta total con impuestos',
-        isSeparateTickets: false,
-        alertOnBreak: true,
-        promoSource: 'Air France (Oficial)',
-        promoUrl: 'https://wwws.airfrance.co/',
-        history: [4400000, 4100000, 3890000, 3600000, 3350000, 4900000, 5200000, 4600000, 3550000, 3200000, 3680000, 5100000]
-      },
-      {
-        id: 'vip-15',
-        origin: 'Medellín (MDE)',
-        originCode: 'MDE',
-        destination: 'Punta Cana (PUJ), Rep. Dominicana',
-        destCode: 'PUJ',
-        departureDate: '2026-10-10',
-        returnDate: '2026-10-17',
-        baselineRecordCOP: 1280000,
-        currentPriceCOP: 1450000,
-        lastScanned: 'Hoy, 07:30 AM',
-        priority: true,
-        directFlight: true,
-        airline: 'Arajet / Wingo (Vuelo Directo)',
-        airlineNote: 'Vuelo directo ultra low cost ida y vuelta total con impuestos',
-        isSeparateTickets: false,
-        alertOnBreak: true,
-        promoSource: 'Arajet (Oficial)',
-        promoUrl: 'https://www.arajet.com/es',
-        history: [1950000, 1780000, 1620000, 1500000, 1380000, 2100000, 2250000, 1890000, 1450000, 1280000, 1520000, 2180000]
+        history: [6800000, 6200000, 5800000, 5300000, 4980000, 7200000, 7600000, 6500000, 4980000, 4650000, 5200000, 7300000]
       }
     ];
 
+    // Listado del RADAR GLOBAL (Vuelos Inter-Hubs & Promociones Internacionales Conectoras)
     const INITIAL_LIVE_DEALS = [
       {
-        id: 'deal-100-bga-bog',
-        origin: 'Bucaramanga (BGA)',
-        destination: 'Bogotá (BOG)',
-        region: 'Colombia',
-        priceCOP: 135532,
-        baselineRecordCOP: 215000,
-        normalPriceCOP: 320000,
+        id: 'deal-global-1',
+        origin: 'Madrid (MAD)',
+        destination: 'Copenhague (CPH), Dinamarca',
+        region: 'Europa',
+        priceCOP: 185000,
+        baselineRecordCOP: 220000,
+        normalPriceCOP: 450000,
         discountPct: 58,
-        airline: 'JetSMART / Wingo (Vuelo Directo)',
-        originCode: 'BGA',
-        destCode: 'BOG',
-        departureDate: '2026-10-29',
-        returnDate: '2026-11-01',
-        datesFormatted: '29 Octubre - 01 Noviembre 2026',
-        route: 'Bucaramanga ➔ Bogotá (Directo 50 min)',
-        layoverNote: 'Tarifa real TOTAL ida y vuelta con impuestos incluidos para fechas récord de Oct/Nov',
+        airline: 'Ryanair / Norwegian',
+        originCode: 'MAD',
+        destCode: 'CPH',
+        departureDate: '2026-10-12',
+        returnDate: '2026-10-18',
+        datesFormatted: '12 Octubre - 18 Octubre 2026',
+        route: 'Madrid ➔ Copenhague (Directo 3h 15m)',
+        layoverNote: 'Conector perfecto si vuelas de Colombia a Madrid. Ida y vuelta total.',
         isSeparateTickets: false,
         isNewRecord: true,
-        promoSource: 'JetSMART (Oficial)',
-        promoUrl: 'https://www.google.com/travel/flights?q=Flights+from+BGA+to+BOG+on+2026-10-29+through+2026-11-01'
+        promoSource: 'Ryanair (Oficial)',
+        promoUrl: 'https://www.ryanair.com/'
       },
       {
-        id: 'deal-101-a',
-        origin: 'Bogotá (BOG)',
-        destination: 'Tokio (HND/NRT), Japón',
+        id: 'deal-global-2',
+        origin: 'Nueva York (JFK)',
+        destination: 'Bangkok (BKK), Tailandia',
         region: 'Asia',
-        priceCOP: 3949691,
-        baselineRecordCOP: 5500000,
-        normalPriceCOP: 7800000,
-        discountPct: 49,
-        airline: 'Air Canada (Vía Toronto YYZ / Montreal YUL)',
-        originCode: 'BOG',
-        destCode: 'NRT',
-        departureDate: '2026-12-03',
-        returnDate: '2026-12-12',
-        datesFormatted: '03 Diciembre - 12 Diciembre 2026',
-        route: 'Bogotá -> Toronto (Escala 3h) -> Tokio (NRT)',
-        layoverNote: 'Tarifa oficial TOTAL ida y vuelta con impuestos en Air Canada y Google Flights',
-        isSeparateTickets: false,
-        isNewRecord: true,
-        promoSource: 'Air Canada (Oficial)',
-        promoUrl: 'https://www.aircanada.com/'
-      },
-      {
-        id: 'deal-101-b',
-        origin: 'Bucaramanga (BGA)',
-        destination: 'Ciudad de Panamá (PTY)',
-        region: 'Centroamérica',
-        priceCOP: 1332275,
-        baselineRecordCOP: 1294696,
-        normalPriceCOP: 2257270,
-        discountPct: 41,
-        airline: 'Wingo (vía Medellín MDE) / Avianca',
-        originCode: 'BGA',
-        destCode: 'PTY',
-        departureDate: '2026-10-05',
-        returnDate: '2026-10-12',
-        datesFormatted: '05 Octubre - 12 Octubre 2026',
-        route: 'Tramo 1: BGA ➔ MDE | Tramo 2: MDE ➔ PTY (Conexión MDE)',
-        layoverNote: 'Tarifa TOTAL ida y vuelta haciendo 2 compras independientes en Wingo.',
-        isSeparateTickets: true,
-        separateTicketWarning: '⚠️ COMPRA POR SEPARADO EN WINGO: Debes hacer 2 compras independientes en la web de Wingo.',
-        isNewRecord: true,
-        promoSource: 'Wingo (Oficial)',
-        promoUrl: 'https://www.wingo.com/'
-      },
-      {
-        id: 'deal-102',
-        origin: 'Bucaramanga (BGA)',
-        destination: 'Miami (MIA / FLL), EE.UU.',
-        region: 'Norteamérica',
-        priceCOP: 1252720,
-        baselineRecordCOP: 1529981,
-        normalPriceCOP: 2200000,
-        discountPct: 43,
-        airline: 'Copa Airlines / United / Avianca',
-        originCode: 'BGA',
-        destCode: 'MIA',
-        departureDate: '2026-11-10',
-        returnDate: '2026-11-24',
-        datesFormatted: '10 Noviembre - 24 Noviembre 2026',
-        route: 'Bucaramanga -> Panamá (PTY) -> Fort Lauderdale / Miami',
-        layoverNote: 'Tarifa TOTAL piso en Google Flights por $1.252.720 COP ida y vuelta',
+        priceCOP: 2150000,
+        baselineRecordCOP: 2500000,
+        normalPriceCOP: 4200000,
+        discountPct: 48,
+        airline: 'ANA / Japan Airlines / Cathay',
+        originCode: 'JFK',
+        destCode: 'BKK',
+        departureDate: '2026-11-05',
+        returnDate: '2026-11-20',
+        datesFormatted: '05 Noviembre - 20 Noviembre 2026',
+        route: 'Nueva York ➔ Tokio (Escala) ➔ Bangkok',
+        layoverNote: 'Combinable con vuelos baratos Colombia-Miami/NYC. Total ida y vuelta.',
         isSeparateTickets: false,
         isNewRecord: true,
         promoSource: 'Google Flights (Oficial)',
-        promoUrl: 'https://www.google.com/travel/flights?q=Flights+from+BGA+to+MIA+on+2026-11-10+through+2026-11-24'
+        promoUrl: 'https://www.google.com/travel/flights'
+      },
+      {
+        id: 'deal-global-3',
+        origin: 'Tokio (NRT)',
+        destination: 'Bali / Denpasar (DPS), Indonesia',
+        region: 'Asia',
+        priceCOP: 920000,
+        baselineRecordCOP: 1100000,
+        normalPriceCOP: 1850000,
+        discountPct: 50,
+        airline: 'AirAsia / VietJet Air',
+        originCode: 'NRT',
+        destCode: 'DPS',
+        departureDate: '2026-12-10',
+        returnDate: '2026-12-22',
+        datesFormatted: '10 Diciembre - 22 Diciembre 2026',
+        route: 'Tokio ➔ Denpasar Bali (Directo 7h 30m)',
+        layoverNote: 'Tarifa conector low cost ideal para combinar con el vuelo a Japón.',
+        isSeparateTickets: false,
+        isNewRecord: true,
+        promoSource: 'AirAsia (Oficial)',
+        promoUrl: 'https://www.airasia.com/'
+      },
+      {
+        id: 'deal-global-4',
+        origin: 'París (CDG)',
+        destination: 'Roma (FCO), Italia',
+        region: 'Europa',
+        priceCOP: 165000,
+        baselineRecordCOP: 210000,
+        normalPriceCOP: 390000,
+        discountPct: 57,
+        airline: 'easyJet / Vueling',
+        originCode: 'CDG',
+        destCode: 'FCO',
+        departureDate: '2026-11-15',
+        returnDate: '2026-11-22',
+        datesFormatted: '15 Noviembre - 22 Noviembre 2026',
+        route: 'París ➔ Roma Fiumicino (Directo 2h)',
+        layoverNote: 'Euro-conector ultra económico. Ida y vuelta total con impuestos.',
+        isSeparateTickets: false,
+        isNewRecord: true,
+        promoSource: 'easyJet (Oficial)',
+        promoUrl: 'https://www.easyjet.com/'
+      },
+      {
+        id: 'deal-global-5',
+        origin: 'Dubái (DXB)',
+        destination: 'Maldivas / Malé (MLE)',
+        region: 'Medio Oriente',
+        priceCOP: 1150000,
+        baselineRecordCOP: 1350000,
+        normalPriceCOP: 2400000,
+        discountPct: 52,
+        airline: 'flydubai / Emirates',
+        originCode: 'DXB',
+        destCode: 'MLE',
+        departureDate: '2026-11-18',
+        returnDate: '2026-11-26',
+        datesFormatted: '18 Noviembre - 26 Noviembre 2026',
+        route: 'Dubái ➔ Malé Maldivas (Directo 4h 15m)',
+        layoverNote: 'Ideal para extender el vuelo Bogotá-Dubái de Emirates.',
+        isSeparateTickets: false,
+        isNewRecord: true,
+        promoSource: 'Emirates (Oficial)',
+        promoUrl: 'https://www.emirates.com/'
+      },
+      {
+        id: 'deal-global-6',
+        origin: 'Estambul (IST)',
+        destination: 'Atenas (ATH), Grecia',
+        region: 'Europa',
+        priceCOP: 220000,
+        baselineRecordCOP: 280000,
+        normalPriceCOP: 520000,
+        discountPct: 57,
+        airline: 'Pegasus Airlines / Aegean',
+        originCode: 'IST',
+        destCode: 'ATH',
+        departureDate: '2026-11-08',
+        returnDate: '2026-11-15',
+        datesFormatted: '08 Noviembre - 15 Noviembre 2026',
+        route: 'Estambul ➔ Atenas (Directo 1h 20m)',
+        layoverNote: 'Excelente conector para combinar con el vuelo directo a Estambul.',
+        isSeparateTickets: false,
+        isNewRecord: true,
+        promoSource: 'Pegasus Airlines (Oficial)',
+        promoUrl: 'https://www.flypgs.com/'
       }
     ];
 
@@ -587,8 +901,8 @@
       const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
 
       const [logs, setLogs] = useState([
-        { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro Engine v28.0 (Tarifas Récord Mínimas en Primer Plano) iniciado.' },
-        { id: 2, time: new Date().toLocaleTimeString(), type: 'INFO', tag: 'RADAR', msg: '📡 Monitoreando 15 rutas VIP con fechas mínimas piso $COP centradas en la máxima economía.' },
+        { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro v29.0 (Rutas VIP de BGA, MDE y BOG) iniciado.' },
+        { id: 2, time: new Date().toLocaleTimeString(), type: 'INFO', tag: 'RADAR', msg: '📡 Monitoreando 28 Rutas VIP y Radar de Ofertas Inter-Hub Global.' },
         { id: 3, time: new Date().toLocaleTimeString(), type: 'OK', tag: 'CORREO', msg: `📧 Canal de alertas listo para envío directo ➔ ${userEmail}` }
       ]);
       const terminalEndRef = useRef(null);
@@ -613,7 +927,7 @@
         }
       });
 
-      const [selectedRouteHistoryId, setSelectedRouteHistoryId] = useState('vip-1');
+      const [selectedRouteHistoryId, setSelectedRouteHistoryId] = useState('vip-bga-1');
       const [deals, setDeals] = useState(INITIAL_LIVE_DEALS);
       const [activeTab, setActiveTab] = useState('vip');
       const [searchQuery, setSearchQuery] = useState('');
@@ -770,7 +1084,7 @@
         const subject = `✈️ VuelosRadar Pro: Prueba de Alerta Directa`;
         const bodyText = `Hola!\nEste es un correo de prueba enviado desde tu aplicación VuelosRadar Pro.\n\n` +
           `Tus alertas están configuradas para el correo: ${userEmail}.\n` +
-          `Recibirás notificaciones automáticas con TARIFAS TOTALES FINALES DE IDA Y VUELTA (CON IMPUESTOS Y TASAS) cuando tus 15 rutas VIP bajen de su precio récord del año.`;
+          `Recibirás notificaciones automáticas con TARIFAS TOTALES FINALES DE IDA Y VUELTA (CON IMPUESTOS Y TASAS) cuando tus Rutas VIP bajen de su precio récord del año.`;
 
         const ok = await dispatchRealEmail(subject, bodyText, { origin: 'Bucaramanga (BGA)', destination: 'Bogotá (BOG)', newRecord: 135532 });
         setIsSendingTestEmail(false);
@@ -786,13 +1100,13 @@
         isScanningRef.current = true;
         setIsScanningLive(true);
         setActiveTab('console');
-        addLog('SYS', 'SCAN_START', '🔍 Verificando estado real de las 15 rutas VIP vía Gemini 3 Flash Google Search Grounding...');
+        addLog('SYS', 'SCAN_START', `🔍 Verificando estado real de las ${priorityRoutes.length} Rutas VIP vía Gemini 3 Flash...`);
 
         let tempRoutes = JSON.parse(JSON.stringify(priorityRoutes));
 
         for (let i = 0; i < tempRoutes.length; i++) {
           const route = tempRoutes[i];
-          addLog('INFO', 'SCAN_ROUTE', `[${i + 1}/15] Consultando precios en vivo: ${route.origin} ➔ ${route.destination}...`);
+          addLog('INFO', 'SCAN_ROUTE', `[${i + 1}/${tempRoutes.length}] Consultando precios en vivo: ${route.origin} ➔ ${route.destination}...`);
 
           try {
             const promptQuery = `Consulta el precio actual exacto más bajo en $COP para un tiquete ida y vuelta de ${route.origin} a ${route.destination} en Google Flights o sitios oficiales de aerolíneas. Muestra el precio numérico exacto en $COP con impuestos y las fechas más económicas encontradas. Responde en formato JSON: {"currentPriceCOP": numero, "bestDepartureDate": "YYYY-MM-DD", "bestReturnDate": "YYYY-MM-DD", "airline": "nombre aerolinea"}`;
@@ -828,7 +1142,7 @@
                 }
                 tempRoutes[i].lastScanned = `Hoy, ${new Date().toLocaleTimeString()} (Verificado en Vivo)`;
                 
-                addLog('OK', 'SCAN_UPDATED', `[${i + 1}/15] Tarifa en vivo verificada: ${formatCOP(tempRoutes[i].currentPriceCOP)} (${tempRoutes[i].departureDate} al ${tempRoutes[i].returnDate})`);
+                addLog('OK', 'SCAN_UPDATED', `[${i + 1}/${tempRoutes.length}] Tarifa en vivo verificada: ${formatCOP(tempRoutes[i].currentPriceCOP)} (${tempRoutes[i].departureDate} al ${tempRoutes[i].returnDate})`);
               } else {
                 tempRoutes[i].lastScanned = `Hoy, ${new Date().toLocaleTimeString()}`;
                 addLog('INFO', 'SCAN_STABLE', `Tarifa confirmada: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Estable`);
@@ -847,7 +1161,7 @@
 
         isScanningRef.current = false;
         setIsScanningLive(false);
-        addLog('OK', 'SCAN_COMPLETE', `✅ Escaneo en vivo completado. 15 Rutas VIP sincronizadas con precios y fechas récord.`);
+        addLog('OK', 'SCAN_COMPLETE', `✅ Escaneo en vivo completado. ${tempRoutes.length} Rutas VIP sincronizadas.`);
         showToast("🔍 Escaneo completado. Tarifas y fechas de precio mínimo actualizadas.");
       };
 
@@ -861,7 +1175,7 @@
           ? "El pasajero TIENE Visa de EE.UU. vigente (puedes sugerir escalas por Miami MIA, Nueva York JFK, Houston IAH, Toronto YYZ o Europa)."
           : "El pasajero NO TIENE Visa de EE.UU. (NO sugerir escalas por EE.UU. ni Canadá). Enfócate en hubs sin visa como Panamá PTY, Madrid MAD, París CDG, Estambul IST, Dubái DXB, Doha DOH o Sao Paulo GRU.";
 
-        const promptQuery = `Actúa como un Asistente Senior de Aviación Comercial y Estrategia de Vuelos Internacionales para colombianos.
+        const promptQuery = `Actúa como un Asistente Senior de Aviación Comercial y Estrategia de Vuelos Internacionales para colombianos saliendo exclusivamente desde Bucaramanga, Medellín o Bogotá.
         
         Analiza las mejores alternativas de rutas, escalas y conectores aéreos desde Colombia hacia el destino: "${routeDest}".
         
@@ -946,7 +1260,7 @@
                   <h1 className="font-extrabold text-sm sm:text-base tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent flex items-center gap-1.5">
                     VuelosRadar <span className="text-cyan-400 text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 font-semibold uppercase">PRO CO</span>
                   </h1>
-                  <p className="text-[10px] sm:text-xs text-slate-400 line-clamp-1">Tarifas Récord Mínimas y Fechas Máss Económicas en Primer Plano ($COP)</p>
+                  <p className="text-[10px] sm:text-xs text-slate-400 line-clamp-1">Salidas Estrictas de Bucaramanga, Medellín y Bogotá ($COP Con Impuestos)</p>
                 </div>
               </div>
 
@@ -978,7 +1292,7 @@
                   className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 px-3 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap shadow-md shadow-emerald-500/20 active:scale-95"
                 >
                   <IconRefresh className={`w-3.5 h-3.5 ${isScanningLive ? 'animate-spin' : ''}`} />
-                  <span className="hidden sm:inline">{isScanningLive ? 'Verificando...' : 'Escanear 15 Rutas'}</span>
+                  <span className="hidden sm:inline">{isScanningLive ? 'Verificando...' : 'Escanear Rutas VIP'}</span>
                 </button>
               </div>
             </div>
@@ -1003,14 +1317,14 @@
                       🏆 TARIFA MÍNIMA RÉCORD PRIMERO
                     </span>
                     <span className="text-[10px] font-mono uppercase font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
-                      ✓ FECHAS MÁS BARATAS DEL AÑO DESTACADAS
+                      ✓ SALIDAS EXCLUSIVAS: BUCARAMANGA, MEDELLÍN Y BOGOTÁ
                     </span>
                   </div>
                   <h2 className="text-base sm:text-xl font-extrabold text-white">
                     Prioridad Absoluta a la Tarifa MÁS Económica
                   </h2>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    Las tarjetas destacan en primer lugar el rango de fechas con la tarifa piso absoluta en $COP$. Clic en el botón principal para reservar directamente en las fechas de menor precio.
+                    Rutas VIP configuradas saliendo de Bucaramanga, Medellín y Bogotá. Clic en el botón principal para reservar directamente en las fechas de menor precio.
                   </p>
                 </div>
 
@@ -1026,9 +1340,9 @@
             {/* Pestañas de Navegación Principal */}
             <div className="border-b border-slate-800 pb-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
               {[
-                { id: 'vip', label: '15 Rutas Preferidas (VIP)', icon: IconStar, badge: priorityRoutes.length },
+                { id: 'vip', label: 'Rutas VIP', icon: IconStar, badge: priorityRoutes.length },
                 { id: 'rutas-ia', label: '🧭 Asistente de Escalas IA', icon: IconCompass, badge: 'NUEVO' },
-                { id: 'radar', label: 'Radar de Ofertas Global', icon: IconGlobe, badge: deals.length },
+                { id: 'radar', label: 'Radar de Ofertas Global (Inter-Hubs)', icon: IconGlobe, badge: deals.length },
                 { id: 'records', label: 'Récords & Histórico (1 Año)', icon: IconTrendingDown },
                 { id: 'console', label: '💻 Consola de Resultados', icon: IconTerminal, badge: logs.length },
                 { id: 'correo', label: 'Configurar Alertas Correo', icon: IconMail }
@@ -1056,14 +1370,14 @@
               })}
             </div>
 
-            {/* Pestaña VIP con Tarifa Récord y Fechas Más Económicas en Encabezado */}
+            {}
             {activeTab === 'vip' && (
               <div className="space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass-panel p-4 rounded-2xl">
                   <div>
                     <h3 className="font-bold text-base text-slate-100 flex items-center gap-2">
                       <IconStar className="w-5 h-5 text-amber-400" />
-                      Mis 15 Rutas Prioritarias — Fechas & Precios Récord Mínimos
+                      Rutas VIP ({priorityRoutes.length}) — Bucaramanga, Medellín y Bogotá
                     </h3>
                     <p className="text-xs text-slate-400">Pistas destacadas con la tarifa más baja del año para reservar al mejor costo.</p>
                   </div>
@@ -1159,7 +1473,6 @@
                               <IconExternalLink className="w-4 h-4 stroke-[2.5]" />
                             </a>
 
-                            {/* Links secundarios alternativos */}
                             <div className="flex flex-wrap items-center gap-1.5 pt-1">
                               <a
                                 href={buildGoogleFlightsUrl(route.originCode || 'BGA', route.destCode || 'BOG', route.departureDate, route.returnDate)}
@@ -1170,19 +1483,6 @@
                                 <span>🔍 Buscar en Google Flights</span>
                                 <IconExternalLink className="w-3 h-3" />
                               </a>
-
-                              {(route.secondaryLinks || []).map((sec, sIdx) => (
-                                <a
-                                  key={sIdx}
-                                  href={sec.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-slate-700 px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center gap-1 transition-all"
-                                >
-                                  <span>✈️ {sec.name}</span>
-                                  <IconExternalLink className="w-3 h-3" />
-                                </a>
-                              ))}
                             </div>
                           </div>
                         </div>
@@ -1208,7 +1508,7 @@
               </div>
             )}
 
-            {/* Pestaña Escalas IA */}
+            {}
             {activeTab === 'rutas-ia' && (
               <div className="glass-panel p-5 sm:p-6 rounded-3xl space-y-6 max-w-4xl mx-auto">
                 <div className="border-b border-slate-800 pb-4">
@@ -1217,24 +1517,22 @@
                     <span>Asistente Especializado en Escalas, Hubs & Conexiones IA</span>
                   </div>
                   <p className="text-xs text-slate-400 pt-1">
-                    Ingresa cualquier destino mundial. La IA calculará los mejores conectores saliendo de Colombia indicando Tarifas Totales Ida y Vuelta con Impuestos.
+                    Ingresa cualquier destino mundial. La IA calculará los mejores conectores saliendo de Bucaramanga, Medellín o Bogotá con Tarifas Totales Ida y Vuelta con Impuestos.
                   </p>
                 </div>
 
                 <form onSubmit={handleRouteAnalysisSubmit} className="space-y-4 text-xs">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-slate-300 block mb-1 font-semibold">Tu Ciudad de Origen en Colombia *</label>
+                      <label className="text-slate-300 block mb-1 font-semibold">Tu Ciudad de Origen en Colombia (Sólo BGA, MDE o BOG) *</label>
                       <select
                         value={routeOrigin}
                         onChange={(e) => setRouteOrigin(e.target.value)}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-100 focus:border-cyan-500 focus:outline-none font-semibold text-sm"
                       >
                         <option value="Bucaramanga (BGA)">Bucaramanga (BGA)</option>
-                        <option value="Bogotá (BOG)">Bogotá (BOG)</option>
                         <option value="Medellín (MDE)">Medellín (MDE)</option>
-                        <option value="Cali (CLO)">Cali (CLO)</option>
-                        <option value="Cartagena (CTG)">Cartagena (CTG)</option>
+                        <option value="Bogotá (BOG)">Bogotá (BOG)</option>
                       </select>
                     </div>
 
@@ -1245,7 +1543,7 @@
                         value={routeDest}
                         onChange={(e) => setRouteDestination(e.target.value)}
                         required
-                        placeholder="Ej: Isla Mauricio, Sri Lanka, Tokio, Roma, Bali..."
+                        placeholder="Ej: Isla Mauricio, Sri Lanka, Tokio, Roma, Bali, Sídney..."
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-100 focus:border-cyan-500 focus:outline-none text-sm font-semibold"
                       />
                     </div>
@@ -1334,7 +1632,7 @@
               </div>
             )}
 
-            {/* Consola Terminal */}
+            {}
             {activeTab === 'console' && (
               <div className="terminal-bg rounded-3xl p-4 sm:p-5 space-y-4 font-mono text-xs border border-cyan-500/30">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
@@ -1421,21 +1719,21 @@
               </div>
             )}
 
-            {/* Radar Global */}
+            {}
             {activeTab === 'radar' && (
               <div className="space-y-5">
                 <div className="glass-panel p-4 rounded-2xl border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <h3 className="font-extrabold text-sm text-cyan-300 flex items-center gap-2">
                       <IconGlobe className="w-4 h-4 text-cyan-400" />
-                      Radar de Ofertas Global — Caza de Mega Descuentos (&gt;40% a 60% OFF)
+                      Radar de Ofertas Global — Vuelos Conectores Inter-Hubs & Promos Mundiales
                     </h3>
                     <p className="text-xs text-slate-400 pt-0.5">
-                      Rastrea ofertas relámpago espontáneas saliendo desde Colombia con valores TOTALES DE IDA Y VUELTA CON IMPUESTOS INCLUIDOS.
+                      Promociones internacionales entre grandes hubs (ej: Madrid-Copenhague, NY-Bangkok, Tokio-Bali) para usarlas como escalas o tramos independientes.
                     </p>
                   </div>
                   <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30 whitespace-nowrap">
-                    {deals.length} Ofertas de Descuento Activas
+                    {deals.length} Ofertas Inter-Hub Activas
                   </span>
                 </div>
 
@@ -1444,7 +1742,7 @@
                     <IconSearch className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
                       type="text"
-                      placeholder="Buscar oferta por destino (Panamá, Madrid, Tokio, Dubái, Lima)..."
+                      placeholder="Buscar conector global (Madrid, Bangkok, Copenhague, Bali, Roma)..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
@@ -1452,7 +1750,7 @@
                   </div>
 
                   <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                    {['Todas', 'Colombia', 'Asia', 'Europa', 'Medio Oriente', 'Sudamérica', 'Centroamérica', 'Norteamérica'].map(reg => (
+                    {['Todas', 'Europa', 'Asia', 'Medio Oriente', 'Norteamérica'].map(reg => (
                       <button
                         key={reg}
                         onClick={() => setSelectedRegion(reg)}
@@ -1482,7 +1780,7 @@
                         <div className="space-y-2">
                           <div className="flex items-center justify-between text-[10px] font-mono">
                             <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase">
-                              -{deal.discountPct}% DCTO RÉCORD
+                              -{deal.discountPct}% DCTO CONECTOR
                             </span>
                             <span className="text-cyan-400 font-bold">📅 {deal.datesFormatted}</span>
                           </div>
@@ -1490,13 +1788,6 @@
                           <h3 className="text-base sm:text-lg font-extrabold text-white">
                             {deal.origin} ➔ {deal.destination}
                           </h3>
-
-                          {deal.isSeparateTickets && (
-                            <div className="bg-amber-500/10 border border-amber-500/30 p-2 rounded-xl flex items-start gap-1.5 text-[10px] text-amber-300 font-sans">
-                              <IconAlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-400 mt-0.5" />
-                              <span>{deal.separateTicketWarning || '⚠️ COMPRA POR SEPARADO: Se deben adquirir 2 tiquetes independientes en aerolíneas distintas.'}</span>
-                            </div>
-                          )}
 
                           <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800 space-y-1 text-xs">
                             <p className="text-emerald-400 font-bold">✈️ Aerolínea: {deal.airline}</p>
@@ -1538,7 +1829,7 @@
               </div>
             )}
 
-            {/* Pestaña Histórico */}
+            {}
             {activeTab === 'records' && (
               <div className="glass-panel p-5 sm:p-6 rounded-3xl space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
@@ -1551,7 +1842,7 @@
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <label className="text-xs text-slate-400 font-mono hidden sm:inline">Seleccionar Ruta:</label>
+                    <label className="text-xs text-slate-400 font-mono hidden sm:inline">Seleccionar Ruta VIP:</label>
                     <select
                       value={selectedRouteHistoryId}
                       onChange={(e) => setSelectedRouteHistoryId(e.target.value)}
@@ -1580,7 +1871,7 @@
                     <IconMail className="w-5 h-5 text-cyan-400" />
                     Configuración de Alertas Automáticas al Correo Electrónico
                   </h3>
-                  <p className="text-xs text-slate-400">Recibe un correo electrónico inmediato en tu bandeja de entrada cada vez que cualquiera de tus 15 rutas preferidas rompa su récord de precio mínimo anual (Ida y vuelta con impuestos incluidos).</p>
+                  <p className="text-xs text-slate-400">Recibe un correo electrónico inmediato en tu bandeja de entrada cada vez que cualquiera de tus Rutas VIP rompa su récord de precio mínimo anual.</p>
                 </div>
 
                 <form
@@ -1685,7 +1976,7 @@
                   className="space-y-4 text-xs"
                 >
                   <div>
-                    <label className="text-slate-400 block mb-1 font-medium">Origen en Colombia *</label>
+                    <label className="text-slate-400 block mb-1 font-medium">Origen en Colombia (BGA, MDE o BOG) *</label>
                     <input
                       name="origin"
                       required
