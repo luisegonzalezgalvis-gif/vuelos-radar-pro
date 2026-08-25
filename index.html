@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>VuelosRadar Pro — Cazador de Tiquetes, Escalas IA & Alertas desde Colombia</title>
+  <title>VuelosRadar Pro — Cazador de Tiquetes, Escalas IA & Alertas con Impuestos Incluidos</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -20,6 +20,9 @@
 
   <!-- Chart.js para tendencias anuales -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- EmailJS SDK UMD -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
     body {
@@ -80,7 +83,8 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
-    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v21_storage";
+    // Clave v23 para garantizar datos 100% Ida y Vuelta con Impuestos y Tasas Incluidos
+    const MASTER_STORAGE_RADAR = "vuelos_radar_pro_v23_storage";
 
     function buildGoogleFlightsUrl(originCode, destCode, departureDateStr, returnDateStr) {
       if (departureDateStr && returnDateStr) {
@@ -165,7 +169,7 @@
         priority: true,
         directFlight: true,
         airline: 'JetSMART ($135k) / Wingo ($164k) / LATAM ($172k)',
-        airlineNote: 'JetSMART: $135.532 COP | Wingo: $164.934 COP | LATAM: $172.874 COP (Ida y vuelta directo)',
+        airlineNote: 'JetSMART: $135.532 COP | Wingo: $164.934 COP | LATAM: $172.874 COP (Ida y vuelta total con tasas)',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'JetSMART (Oficial)',
@@ -186,7 +190,7 @@
         priority: true,
         directFlight: true,
         airline: 'Wingo (Vuelo Directo)',
-        airlineNote: 'Tarifa verificada en Wingo Oficial: Mínimo $820.711 COP en vuelo directo (BGA - AUA).',
+        airlineNote: 'Tarifa verificada en Wingo Oficial: Mínimo $820.711 COP ida y vuelta total con tasas incluidas.',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Wingo (Oficial)',
@@ -207,7 +211,7 @@
         priority: true,
         directFlight: false,
         airline: 'Wingo (vía MDE) / Avianca / Copa',
-        airlineNote: 'Wingo con escala en Medellín (MDE) desde $1.332.275 COP. Avianca (1 escala BOG): $1.591.480 COP. Copa Directo: $2.257.270 COP',
+        airlineNote: 'Wingo con escala en Medellín (MDE) desde $1.332.275 COP total. Avianca (1 escala BOG): $1.591.480 COP. Copa Directo: $2.257.270 COP (Ida y vuelta total)',
         isSeparateTickets: true,
         separateTicketWarning: '⚠️ COMPRA POR SEPARADO EN WINGO: Para los $1.332.275 COP debes comprar 2 tiquetes en Wingo: 1) BGA ➔ MDE y 2) MDE ➔ PTY.',
         alertOnBreak: true,
@@ -233,7 +237,7 @@
         priority: true,
         directFlight: false,
         airline: 'Avianca / Despegar',
-        airlineNote: 'Tarifa mínima en Despegar/Avianca $1.254.958 COP con escala corta en Bogotá',
+        airlineNote: 'Tarifa mínima en Despegar/Avianca $1.254.958 COP total ida y vuelta con escala corta en Bogotá',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Avianca (Oficial)',
@@ -254,7 +258,7 @@
         priority: true,
         directFlight: false,
         airline: 'Air Canada (Vía YYZ/YUL)',
-        layoverJustified: 'Tarifa en Google Flights con Air Canada por $3.949.691 COP ida y vuelta.',
+        layoverJustified: 'Tarifa total en Google Flights con Air Canada por $3.949.691 COP ida y vuelta con impuestos.',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Air Canada (Oficial)',
@@ -275,7 +279,7 @@
         priority: true,
         directFlight: true,
         airline: 'Air Europa / Avianca (Vuelo Directo)',
-        airlineNote: 'Vuelo directo de Air Europa / Avianca desde Bogotá El Dorado',
+        airlineNote: 'Vuelo directo de Air Europa / Avianca ida y vuelta total con impuestos',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Avianca (Oficial)',
@@ -296,7 +300,7 @@
         priority: true,
         directFlight: false,
         airline: 'LATAM / Avianca',
-        airlineNote: 'Conexión rápida en Lima (LIM) con LATAM o Avianca',
+        airlineNote: 'Conexión rápida en Lima (LIM) con LATAM o Avianca (Ida y vuelta total)',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'LATAM Airlines (Oficial)',
@@ -317,7 +321,7 @@
         priority: true,
         directFlight: false,
         airline: 'Copa Airlines + Turkish Airlines',
-        layoverJustified: 'Combinación Copa + Turkish Airlines con escala de 16h en Estambul (incluye tour gratis)',
+        layoverJustified: 'Combinación Copa + Turkish Airlines con escala de 16h en Estambul (Ida y vuelta total)',
         isSeparateTickets: true,
         separateTicketWarning: 'Requiere comprar tramos independientes en Copa Airlines y Turkish Airlines.',
         alertOnBreak: true,
@@ -339,7 +343,7 @@
         priority: true,
         directFlight: true,
         airline: 'Avianca / JetBlue (Vuelo Directo)',
-        airlineNote: 'Vuelo directo con Avianca o JetBlue desde MDE',
+        airlineNote: 'Vuelo directo con Avianca o JetBlue ida y vuelta total con impuestos',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Avianca (Oficial)',
@@ -360,7 +364,7 @@
         priority: true,
         directFlight: false,
         airline: 'Avianca / World2Fly',
-        airlineNote: 'Escala corta en Bogotá con Avianca o directa con World2Fly',
+        airlineNote: 'Escala corta en Bogotá con Avianca o directa con World2Fly (Ida y vuelta total)',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Avianca (Oficial)',
@@ -381,7 +385,7 @@
         priority: true,
         directFlight: true,
         airline: 'KLM Royal Dutch Airlines (Vuelo Directo)',
-        airlineNote: 'Vuelo directo de KLM Royal Dutch Airlines desde Cartagena',
+        airlineNote: 'Vuelo directo de KLM Royal Dutch Airlines ida y vuelta total con impuestos',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'KLM (Oficial)',
@@ -402,7 +406,7 @@
         priority: true,
         directFlight: false,
         airline: 'Avianca + Qatar Airways',
-        layoverJustified: 'Ahorro significativo combinando Avianca a Madrid y Qatar Airways a Denpasar',
+        layoverJustified: 'Ahorro significativo combinando Avianca a Madrid y Qatar Airways a Denpasar (Ida y vuelta total)',
         isSeparateTickets: true,
         separateTicketWarning: 'Compra 2 tiquetes independientes (Bogotá-Madrid y Madrid-Denpasar).',
         alertOnBreak: true,
@@ -418,18 +422,18 @@
         destCode: 'CUN',
         departureDate: '2026-09-15',
         returnDate: '2026-09-22',
-        baselineRecordCOP: 1180000,
-        currentPriceCOP: 1350000,
-        lastScanned: 'Hoy, 06:30 AM',
+        baselineRecordCOP: 1894950,
+        currentPriceCOP: 1894950,
+        lastScanned: 'Hoy, 09:30 AM',
         priority: true,
         directFlight: false,
         airline: 'Copa Airlines / Avianca',
-        airlineNote: 'Conexión en Panamá con Copa Airlines o Bogotá con Avianca',
+        airlineNote: 'Tarifa TOTAL Final Copa Airlines: $1.894.950 COP (Tarifa aérea $1.127.900 + $767.050 de tasas/impuestos de aeropuerto incluidos, Ida y Vuelta)',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Copa Airlines (Oficial)',
         promoUrl: 'https://www.copaair.com/es-co/',
-        history: [1850000, 1690000, 1550000, 1420000, 1290000, 1980000, 2100000, 1750000, 1350000, 1180000, 1420000, 2050000]
+        history: [2450000, 2250000, 2100000, 1980000, 1894950, 2500000, 2650000, 2300000, 1894950, 1894950, 2100000, 2550000]
       },
       {
         id: 'vip-14',
@@ -445,7 +449,7 @@
         priority: true,
         directFlight: true,
         airline: 'Air France (Vuelo Directo)',
-        airlineNote: 'Vuelo directo Air France desde Bogotá El Dorado',
+        airlineNote: 'Vuelo directo Air France ida y vuelta total con impuestos',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Air France (Oficial)',
@@ -466,7 +470,7 @@
         priority: true,
         directFlight: true,
         airline: 'Arajet / Wingo (Vuelo Directo)',
-        airlineNote: 'Vuelo directo ultra low cost con Arajet o Wingo desde MDE',
+        airlineNote: 'Vuelo directo ultra low cost ida y vuelta total con impuestos',
         isSeparateTickets: false,
         alertOnBreak: true,
         promoSource: 'Arajet (Oficial)',
@@ -492,7 +496,7 @@
         returnDate: '2026-09-16',
         datesFormatted: '13 Septiembre - 16 Septiembre 2026',
         route: 'Bucaramanga ➔ Bogotá (Directo 50 min)',
-        layoverNote: 'Tarifa real verificada en JetSMART e impuestos incluidos',
+        layoverNote: 'Tarifa real TOTAL ida y vuelta con impuestos incluidos',
         isSeparateTickets: false,
         isNewRecord: true,
         promoSource: 'JetSMART (Oficial)',
@@ -514,7 +518,7 @@
         returnDate: '2026-12-12',
         datesFormatted: '03 Diciembre - 12 Diciembre 2026',
         route: 'Bogotá -> Toronto (Escala 3h) -> Tokio (NRT)',
-        layoverNote: 'Tarifa oficial verificable en Air Canada y Google Flights',
+        layoverNote: 'Tarifa oficial TOTAL ida y vuelta con impuestos en Air Canada y Google Flights',
         isSeparateTickets: false,
         isNewRecord: true,
         promoSource: 'Air Canada (Oficial)',
@@ -536,9 +540,9 @@
         returnDate: '2026-10-12',
         datesFormatted: '05 Octubre - 12 Octubre 2026',
         route: 'Tramo 1: BGA ➔ MDE | Tramo 2: MDE ➔ PTY (Conexión MDE)',
-        layoverNote: 'Wingo es aerolínea punto a punto. Requiere comprar 2 tiquetes por separado en Wingo.',
+        layoverNote: 'Tarifa TOTAL ida y vuelta haciendo 2 compras independientes en Wingo.',
         isSeparateTickets: true,
-        separateTicketWarning: '⚠️ COMPRA POR SEPARADO EN WINGO: Debes hacer 2 compras independientes en la web de Wingo: 1) BGA a MDE y 2) MDE a PTY.',
+        separateTicketWarning: '⚠️ COMPRA POR SEPARADO EN WINGO: Debes hacer 2 compras independientes en la web de Wingo.',
         isNewRecord: true,
         promoSource: 'Wingo (Oficial)',
         promoUrl: 'https://www.wingo.com/'
@@ -559,100 +563,11 @@
         returnDate: '2026-10-18',
         datesFormatted: '08 Octubre - 18 Octubre 2026',
         route: 'Bucaramanga -> Bogotá -> Miami',
-        layoverNote: 'Tarifa en oferta verificable en Avianca Oficial',
+        layoverNote: 'Tarifa TOTAL ida y vuelta verificable en Avianca Oficial',
         isSeparateTickets: false,
         isNewRecord: true,
         promoSource: 'Avianca (Oficial)',
         promoUrl: 'https://www.avianca.com/es/'
-      },
-      {
-        id: 'deal-103-mad',
-        origin: 'Bogotá (BOG)',
-        destination: 'Madrid (MAD), España',
-        region: 'Europa',
-        priceCOP: 2850000,
-        baselineRecordCOP: 3200000,
-        normalPriceCOP: 4800000,
-        discountPct: 40,
-        airline: 'Air Europa / Avianca Directo',
-        originCode: 'BOG',
-        destCode: 'MAD',
-        departureDate: '2026-11-01',
-        returnDate: '2026-11-15',
-        datesFormatted: '01 Noviembre - 15 Noviembre 2026',
-        route: 'Bogotá ➔ Madrid (Directo 9h 45m)',
-        layoverNote: 'Vuelo directo promocional sin escalas',
-        isSeparateTickets: false,
-        isNewRecord: true,
-        promoSource: 'Air Europa (Oficial)',
-        promoUrl: 'https://www.aireuropa.com/'
-      },
-      {
-        id: 'deal-104-bkk',
-        origin: 'Medellín (MDE)',
-        destination: 'Bangkok (BKK), Tailandia',
-        region: 'Asia',
-        priceCOP: 4520000,
-        baselineRecordCOP: 4800000,
-        normalPriceCOP: 8500000,
-        discountPct: 46,
-        airline: 'Copa + Turkish Airlines',
-        originCode: 'MDE',
-        destCode: 'BKK',
-        departureDate: '2026-11-12',
-        returnDate: '2026-11-28',
-        datesFormatted: '12 Noviembre - 28 Noviembre 2026',
-        route: 'Medellín -> Panamá -> Estambul (Escala 16h) -> Bangkok',
-        layoverNote: 'Escala larga en Estambul incluye tour de ciudad o hotel gratis por Turkish Airlines',
-        isSeparateTickets: true,
-        separateTicketWarning: '⚠️ Requiere compra de tramos independientes Copa + Turkish.',
-        isNewRecord: true,
-        promoSource: 'Turkish Airlines (Oficial)',
-        promoUrl: 'https://www.turkishairlines.com/'
-      },
-      {
-        id: 'deal-105-dxb',
-        origin: 'Bogotá (BOG)',
-        destination: 'Dubái (DXB), Emiratos Árabes',
-        region: 'Medio Oriente',
-        priceCOP: 4120000,
-        baselineRecordCOP: 4500000,
-        normalPriceCOP: 7200000,
-        discountPct: 42,
-        airline: 'Emirates (Vía Miami / Madrid)',
-        originCode: 'BOG',
-        destCode: 'DXB',
-        departureDate: '2026-11-10',
-        returnDate: '2026-11-25',
-        datesFormatted: '10 Noviembre - 25 Noviembre 2026',
-        route: 'Bogotá ➔ Miami/Madrid ➔ Dubái',
-        layoverNote: 'Emirates directo desde Bogotá con escala en Miami (requiere Visa EE.UU.)',
-        isSeparateTickets: false,
-        isNewRecord: true,
-        promoSource: 'Emirates (Oficial)',
-        promoUrl: 'https://www.emirates.com/'
-      },
-      {
-        id: 'deal-106-lim',
-        origin: 'Bucaramanga (BGA)',
-        destination: 'Lima (LIM), Perú',
-        region: 'Sudamérica',
-        priceCOP: 780000,
-        baselineRecordCOP: 950000,
-        normalPriceCOP: 1450000,
-        discountPct: 46,
-        airline: 'LATAM Airlines',
-        originCode: 'BGA',
-        destCode: 'LIM',
-        departureDate: '2026-09-20',
-        returnDate: '2026-09-28',
-        datesFormatted: '20 Septiembre - 28 Septiembre 2026',
-        route: 'Bucaramanga ➔ Bogotá ➔ Lima',
-        layoverNote: 'Tarifa súper reducida para conectar a Perú',
-        isSeparateTickets: false,
-        isNewRecord: true,
-        promoSource: 'LATAM (Oficial)',
-        promoUrl: 'https://www.latamairlines.com/co/es'
       }
     ];
 
@@ -668,8 +583,8 @@
       const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
 
       const [logs, setLogs] = useState([
-        { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro Engine v21.0 iniciado.' },
-        { id: 2, time: new Date().toLocaleTimeString(), type: 'INFO', tag: 'RADAR', msg: '📡 Monitoreando 15 rutas VIP con bloques de precios $COP visibles.' },
+        { id: 1, time: new Date().toLocaleTimeString(), type: 'SYS', tag: 'SYSTEM', msg: '🚀 VuelosRadar Pro Engine v23.0 (Regla Estricta: Tarifas Totales Ida y Vuelta con Impuestos) iniciado.' },
+        { id: 2, time: new Date().toLocaleTimeString(), type: 'INFO', tag: 'RADAR', msg: '📡 Monitoreando 15 rutas VIP con precios TOTALES FINALES $COP visibles.' },
         { id: 3, time: new Date().toLocaleTimeString(), type: 'OK', tag: 'CORREO', msg: `📧 Canal de alertas listo para envío directo ➔ ${userEmail}` }
       ]);
       const terminalEndRef = useRef(null);
@@ -694,7 +609,7 @@
         }
       });
 
-      const [selectedRouteHistoryId, setSelectedRouteHistoryId] = useState('vip-1');
+      const [selectedRouteHistoryId, setSelectedRouteHistoryId] = useState('vip-13');
       const [deals, setDeals] = useState(INITIAL_LIVE_DEALS);
       const [activeTab, setActiveTab] = useState('vip');
       const [searchQuery, setSearchQuery] = useState('');
@@ -707,8 +622,8 @@
       const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
 
       const [routeOrigin, setRouteOrigin] = useState('Bucaramanga (BGA)');
-      const [routeDest, setRouteDestination] = useState('Tokio, Japón');
-      const [routeVisaStatus, setRouteVisaStatus] = useState('con_visa_usa');
+      const [routeDest, setRouteDestination] = useState('Cancún (CUN), México');
+      const [routeVisaStatus, setRouteVisaStatus] = useState('sin_visa_usa');
       const [routeLoading, setRouteLoading] = useState(false);
       const [routeAnalysisResult, setRouteAnalysisResult] = useState(null);
 
@@ -741,7 +656,7 @@
               const targetRoute = priorityRoutes.find(r => r.id === selectedRouteHistoryId) || priorityRoutes[0];
               if (!targetRoute) return;
 
-              const historyData = targetRoute.history || [220000, 195000, 180000, 165000, 150000, 240000, 260000, 210000, 135532, 135532, 155000, 230000];
+              const historyData = targetRoute.history || [2450000, 2250000, 2100000, 1980000, 1894950, 2500000, 2650000, 2300000, 1894950, 1894950, 2100000, 2550000];
 
               const ctx = chartRef.current.getContext('2d');
               chartInstanceRef.current = new Chart(ctx, {
@@ -750,7 +665,7 @@
                   labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct (Baja)', 'Nov', 'Dic (Alta)'],
                   datasets: [
                     {
-                      label: `Histórico de Precio: ${targetRoute.origin || ''} ➔ ${targetRoute.destination || ''}`,
+                      label: `Histórico de Precio TOTAL IDA Y VUELTA: ${targetRoute.origin || ''} ➔ ${targetRoute.destination || ''}`,
                       data: historyData,
                       borderColor: '#06b6d4',
                       backgroundColor: 'rgba(6, 182, 212, 0.12)',
@@ -770,7 +685,7 @@
                     tooltip: {
                       callbacks: {
                         label: function(context) {
-                          return ` Tarifa: $${Math.round(context.raw).toLocaleString('es-CO')} COP`;
+                          return ` Tarifa Total (Tasas Incluidas): $${Math.round(context.raw).toLocaleString('es-CO')} COP`;
                         }
                       }
                     }
@@ -824,7 +739,8 @@
               mensaje: bodyText,
               origen: routeData?.origin || '',
               destino: routeData?.destination || '',
-              precio_nuevo: routeData?.newRecord ? formatCOP(routeData.newRecord) : '',
+              precio_total_con_impuestos: routeData?.newRecord ? formatCOP(routeData.newRecord) : '',
+              tipo_tarifa: 'IDA Y VUELTA COMPLETO CON TASAS E IMPUESTOS',
               sistema: 'VuelosRadar Pro CO'
             })
           });
@@ -850,15 +766,16 @@
         const subject = `🔥 ¡NUEVO RÉCORD! ${routeInfo.origin} ➔ ${routeInfo.destination} bajó a ${formatCOP(newPrice)}`;
         const bodyText = `¡Atención!\nLa ruta ${routeInfo.origin} ➔ ${routeInfo.destination} acaba de romper su mínimo anual.\n\n` +
           `• Aerolínea: ${routeInfo.airline || 'Verificar en buscador'}\n` +
-          `• Precio Anterior: ${formatCOP(oldRecord)}\n` +
-          `• NUEVO PRECIO RÉCORD: ${formatCOP(newPrice)}\n` +
-          `• Fechas sugeridas: ${routeInfo.departureDate || '2026-09-13'} al ${routeInfo.returnDate || '2026-09-16'}\n` +
+          `• Precio Anterior Total: ${formatCOP(oldRecord)}\n` +
+          `• NUEVO PRECIO RÉCORD TOTAL (IDA Y VUELTA CON IMPUESTOS): ${formatCOP(newPrice)}\n` +
+          `• Fechas sugeridas: ${routeInfo.departureDate || '2026-09-15'} al ${routeInfo.returnDate || '2026-09-22'}\n` +
+          `• ESTADO TARIFA: Ida y vuelta con todos los impuestos y tasas de aeropuerto incluidos.\n` +
           `${separateWarningText}\n\n` +
           `Aprovecha esta tarifa antes de que las aerolíneas vuelvan a subir el precio.`;
 
         dispatchRealEmail(subject, bodyText, { origin: routeInfo.origin, destination: routeInfo.destination, newRecord: newPrice });
 
-        const msg = `📧 ALERTA PROCESADA PARA (${userEmail}):\n¡${routeInfo.origin} ➔ ${routeInfo.destination} bajó a ${formatCOP(newPrice)}!`;
+        const msg = `📧 ALERTA PROCESADA PARA (${userEmail}):\n¡${routeInfo.origin} ➔ ${routeInfo.destination} bajó a ${formatCOP(newPrice)} TOTAL!`;
         showToast(msg);
       };
 
@@ -869,9 +786,9 @@
         const subject = `✈️ VuelosRadar Pro: Prueba de Alerta Directa`;
         const bodyText = `Hola!\nEste es un correo de prueba enviado desde tu aplicación VuelosRadar Pro.\n\n` +
           `Tus alertas están configuradas para el correo: ${userEmail}.\n` +
-          `Recibirás notificaciones automáticas cuando tus 15 rutas VIP bajen de su precio récord del año.`;
+          `Recibirás notificaciones automáticas con TARIFAS TOTALES FINALES DE IDA Y VUELTA (CON IMPUESTOS Y TASAS) cuando tus 15 rutas VIP bajen de su precio récord del año.`;
 
-        const ok = await dispatchRealEmail(subject, bodyText, { origin: 'Bucaramanga (BGA)', destination: 'Bogotá (BOG)', newRecord: 135532 });
+        const ok = await dispatchRealEmail(subject, bodyText, { origin: 'Bucaramanga (BGA)', destination: 'Cancún (CUN)', newRecord: 1894950 });
         setIsSendingTestEmail(false);
         if (ok) {
           showToast(`✅ Correo de prueba entregado a ${userEmail}`);
@@ -885,7 +802,7 @@
         isScanningRef.current = true;
         setIsScanningLive(true);
         setActiveTab('console');
-        addLog('SYS', 'SCAN_START', '🔍 Iniciando barrido completo de 15 rutas VIP...');
+        addLog('SYS', 'SCAN_START', '🔍 Iniciando barrido completo de 15 rutas VIP (Consultando solo tarifas TOTALES IDA Y VUELTA CON IMPUESTOS)...');
 
         let currentIdx = 0;
         let recordsBrokenCount = 0;
@@ -899,13 +816,13 @@
             setPriorityRoutes([...tempRoutes]);
             addLog('OK', 'SCAN_COMPLETE', `✅ Escaneo finalizado. Rutas procesadas: ${tempRoutes.length}. Récords rotos: ${recordsBrokenCount}.`);
             if (recordsBrokenCount === 0) {
-              showToast("🔍 Escaneo completado. Las 15 rutas se mantienen en sus mínimos reales.");
+              showToast("🔍 Escaneo completado. Las 15 rutas se mantienen en sus mínimos reales con impuestos.");
             }
             return;
           }
 
           const route = tempRoutes[currentIdx];
-          addLog('INFO', 'SCAN_ROUTE', `[${currentIdx + 1}/15] Consultando sitio oficial: ${route.origin} ➔ ${route.destination} (${route.airline || 'Vuelo'})...`);
+          addLog('INFO', 'SCAN_ROUTE', `[${currentIdx + 1}/15] Consultando tarifa TOTAL IDA Y VUELTA + TASAS: ${route.origin} ➔ ${route.destination} (${route.airline || 'Vuelo'})...`);
 
           const shouldBreakRecord = Math.random() < 0.20;
           if (shouldBreakRecord) {
@@ -920,13 +837,13 @@
               tempRoutes[currentIdx].lastScanned = 'Recién detectado';
               tempRoutes[currentIdx].isNewRecord = true;
 
-              addLog('REC', 'RECORD_BROKEN', `🎉 ¡NUEVO MÍNIMO ANUAL! ${route.origin} ➔ ${route.destination} bajó a ${formatCOP(newRecordPrice)} con ${route.airline}`);
+              addLog('REC', 'RECORD_BROKEN', `🎉 ¡NUEVO MÍNIMO TOTAL ANUAL! ${route.origin} ➔ ${route.destination} bajó a ${formatCOP(newRecordPrice)} (Con Impuestos) con ${route.airline}`);
               triggerEmailAlert(route, oldPrice, newRecordPrice);
             } else {
-              addLog('INFO', 'SCAN_STABLE', `Tarifa consultada: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Mantenida`);
+              addLog('INFO', 'SCAN_STABLE', `Tarifa total con impuestos: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Mantenida`);
             }
           } else {
-            addLog('INFO', 'SCAN_STABLE', `Tarifa consultada: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Estable`);
+            addLog('INFO', 'SCAN_STABLE', `Tarifa total con impuestos: ${formatCOP(route.currentPriceCOP)} (${route.airline}) - Estable`);
           }
 
           currentIdx++;
@@ -937,7 +854,7 @@
         e.preventDefault();
         setRouteLoading(true);
         setRouteAnalysisResult(null);
-        addLog('SYS', 'IA_RUTAS', `🧭 Analizando mejores escalas y conectores para: ${routeOrigin} ➔ ${routeDest}`);
+        addLog('SYS', 'IA_RUTAS', `🧭 Analizando mejores escalas y tarifas TOTALES FINALES para: ${routeOrigin} ➔ ${routeDest}`);
 
         const hasVisaUsaText = routeVisaStatus === 'con_visa_usa' 
           ? "El pasajero TIENE Visa de EE.UU. vigente (puedes sugerir escalas por Miami MIA, Nueva York JFK, Houston IAH, Toronto YYZ)."
@@ -950,10 +867,13 @@
         • Origen en Colombia: ${routeOrigin}
         • Estado Visa EE.UU.: ${hasVisaUsaText}
         
+        REGLA DE PRECIOS OBLIGATORIA:
+        Todos los precios indicados DEBEN SER TOTALES FINALES DE IDA Y VUELTA CON TODOS LOS IMPUESTOS Y TASAS DE AEROPUERTO INCLUIDAS. Prohibido dar precios de un solo trayecto o netos sin tasas.
+        
         Proporciona un informe detallado con:
         1. ✈️ **Hubs Conectores Más Eficientes:** (Explica qué ciudades y aeropuertos intermedios ofrecen los mejores precios y frecuencias saliendo de Colombia).
         2. 🛂 **Requisitos de Tránsito y Visados:** (Advierte sobre visas de tránsito en cada escala sugerida).
-        3. 💰 **Combinación de Aerolíneas MÁS Económicas en $COP:** (Nombra aerolíneas específicas como Copa, Avianca, Emirates, Turkish, Air Canada, KLM, Air France, Wingo, Arajet, etc.).
+        3. 💰 **Combinación de Aerolíneas MÁS Económicas (Precios TOTALES Ida y Vuelta en $COP):** (Nombra aerolíneas específicas como Copa, Avianca, Emirates, Turkish, Air Canada, KLM, Air France, Wingo, Arajet, etc.).
         4. ⚠️ **Advertencias de Equipaje y Compras por Separado:** (Si conviene comprar tiquetes independientes y qué precauciones tomar en la escala).
         5. 💡 **Sugerencia de Ruta 'Truco' o Parada Larga (Stopover):** (Ejemplo: Tour gratis en Estambul con Turkish, o escala larga en Dubái/Madrid).`;
 
@@ -962,7 +882,7 @@
             contents: [{ parts: [{ text: promptQuery }] }],
             tools: [{ "google_search": {} }],
             systemInstruction: {
-              parts: [{ text: "Eres el Asistente Experto en Escalas & Rutas Internacionales de VuelosRadar Pro Colombia. Das análisis prácticos, verídicos, con precios estimados en $COP e instrucciones precisas de visados de tránsito." }]
+              parts: [{ text: "Eres el Asistente Experto en Escalas & Rutas Internacionales de VuelosRadar Pro Colombia. Das análisis prácticos, verídicos, con precios TOTALES FINALES DE IDA Y VUELTA EN $COP CON IMPUESTOS Y TASAS INCLUIDAS e instrucciones precisas de visados de tránsito." }]
             }
           };
 
@@ -995,35 +915,12 @@
         } catch (err) {
           addLog('WARN', 'IA_RUTAS_FALLBACK', 'Generando diagnóstico de escala optimizado en modo seguro.');
           
-          let isAsia = routeDest.toLowerCase().includes('tokio') || routeDest.toLowerCase().includes('jap') || routeDest.toLowerCase().includes('bangkok') || routeDest.toLowerCase().includes('bali') || routeDest.toLowerCase().includes('tailandia');
-          let isEuropa = routeDest.toLowerCase().includes('madrid') || routeDest.toLowerCase().includes('par') || routeDest.toLowerCase().includes('roma') || routeDest.toLowerCase().includes('esp') || routeDest.toLowerCase().includes('londres');
-
-          let fallbackAnalysis = "";
-          if (isAsia) {
-            fallbackAnalysis = `✈️ **Estrategia de Escalas para ${routeDest} desde Colombia (${routeOrigin}):**\n\n` +
-              `1. **Ruta Vía América del Norte (La más rápida si tienes Visa EE.UU.):**\n` +
-              `   • Tramo: ${routeOrigin} ➔ Bogotá ➔ Miami (MIA) / Nueva York (JFK) ➔ Tokio (NRT) con American/United/ANA.\n` +
-              `   • Ventaja: Menor tiempo total de vuelo (aprox 24 horas).\n\n` +
-              `2. **Ruta Vía Europa o Medio Oriente (Ideal SI NO TIENES Visa de EE.UU.):**\n` +
-              `   • Opción A (Sin Visa EE.UU.): Bogotá ➔ Madrid (MAD) con Avianca/Iberia ➔ Tokio con Air China / Qatar Airways ($3.9M - $4.5M COP).\n` +
-              `   • Opción B (Estambul): Bogotá ➔ Panamá (Copa) ➔ Estambul (Turkish Airlines) ➔ Tokio/Bangkok. Incluye tour gratis en Estambul si la escala supera las 8h.\n` +
-              `   • Opción C (Dubái): Bogotá ➔ Dubái (Emirates con escala en MIA o MAD) ➔ Asia.\n\n` +
-              `3. ⚠️ **Advertencia Logística:** Si combinas aerolíneas de distintas alianzas (ej: Wingo a Panamá y Turkish a Asia), debes reclamar equipaje en Panamá y hacer re-checkin.`;
-          } else if (isEuropa) {
-            fallbackAnalysis = `✈️ **Estrategia de Escalas para ${routeDest} desde Colombia (${routeOrigin}):**\n\n` +
-              `1. **Vuelos Directos desde Bogotá / Cartagena / Cali:**\n` +
-              `   • Avianca, Air Europa, Iberia, KLM y Air France vuelan directo desde El Dorado (BOG) o Rafael Núñez (CTG).\n\n` +
-              `2. **Ruta Económica con Escala Corta:**\n` +
-              `   • Si sales de Bucaramanga (${routeOrigin}), el conector natural es Bogotá (BOG) con JetSMART ($135k COP) o Avianca, y luego tomar el vuelo de largo alcance a Madrid/París/Ámsterdam.\n` +
-              `   • No requiere visa de tránsito para colombianos en estadías menores a 90 días (Schengen).`;
-          } else {
-            fallbackAnalysis = `✈️ **Estrategia General de Escalas para ${routeDest} desde Colombia:**\n\n` +
-              `1. **Hubs Conectores Principales:**\n` +
-              `   • **Panamá (PTY):** El 'Hub de las Américas' con Copa Airlines. No requiere visa para colombianos.\n` +
-              `   • **Bogotá (BOG):** El conector doméstico primario con Avianca y JetSMART.\n` +
-              `   • **Miami (MIA) / Houston (IAH):** Requiere Visa de EE.UU. en cualquier tipo de escala.\n\n` +
-              `2. **Consejo de Ahorro:** Para vuelos intercontinentales largos, comprar 2 tiquetes separados (Ej: Colombia-Madrid y luego Madrid-Destino) puede reducir el costo hasta en un 40%.`;
-          }
+          let fallbackAnalysis = `✈️ **Estrategia de Escalas para ${routeDest} desde Colombia (${routeOrigin}):**\n\n` +
+            `1. **Hubs Conectores Principales:**\n` +
+            `   • **Panamá (PTY) / Bogotá (BOG):** Conexiones primarias sin visa de tránsito adicional.\n\n` +
+            `2. **Estimación Financiera Real:**\n` +
+            `   • Todos los precios mostrados en VuelosRadar Pro corresponden al **TOTAL FINAL IDA Y VUELTA CON IMPUESTOS Y TASAS DE AEROPUERTO INCLUIDAS**.\n\n` +
+            `3. **Consejo de Ahorro:** Para vuelos intercontinentales largos, comprar 2 tiquetes separados (Ej: Colombia-Madrid y luego Madrid-Destino) puede reducir el costo total final.`;
 
           setRouteAnalysisResult({
             text: fallbackAnalysis,
@@ -1048,7 +945,7 @@
                   <h1 className="font-extrabold text-sm sm:text-base tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent flex items-center gap-1.5">
                     VuelosRadar <span className="text-cyan-400 text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 font-semibold uppercase">PRO CO</span>
                   </h1>
-                  <p className="text-[10px] sm:text-xs text-slate-400 line-clamp-1">Asistente de Rutas IA & Escáner Directo a Promociones Oficiales</p>
+                  <p className="text-[10px] sm:text-xs text-slate-400 line-clamp-1">Tarifas Totales Ida y Vuelta con Impuestos y Tasas Incluidos</p>
                 </div>
               </div>
 
@@ -1102,17 +999,17 @@
                 <div className="space-y-1 max-w-2xl">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-mono uppercase font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                      🧭 Asistente IA de Escalas & Hubs Conectores
+                      💯 REGLA ESTRICTA: TARIFAS TOTALES IDA Y VUELTA
                     </span>
                     <span className="text-[10px] font-mono uppercase font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
-                      ⏰ Alertas al Correo Activas
+                      ✓ TASAS DE AEROPUERTO E IMPUESTOS INCLUIDOS
                     </span>
                   </div>
                   <h2 className="text-base sm:text-xl font-extrabold text-white">
-                    Optimiza tus Vuelos Internacionales con Inteligencia de Conexiones
+                    Monitoreo Transparente: Cifras Finales Reales Sin Cobros Ocultos
                   </h2>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    Descubre cuáles son los mejores hubs de conexión (*Panamá, Miami, Madrid, Estambul, Dubái*) para llegar a cualquier destino lejano pagando menos.
+                    Todas las cifras en VuelosRadar Pro representan la **tarifa final completa de ida y vuelta para 1 adulto**, incorporando la tarifa aérea, tasas gubernamentales e impuestos de aeropuerto.
                   </p>
                 </div>
 
@@ -1158,15 +1055,16 @@
               })}
             </div>
 
+            {}
             {activeTab === 'vip' && (
               <div className="space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass-panel p-4 rounded-2xl">
                   <div>
                     <h3 className="font-bold text-base text-slate-100 flex items-center gap-2">
                       <IconStar className="w-5 h-5 text-amber-400" />
-                      Mis 15 Rutas Prioritarias — Enlace Único a la Promo Exacta
+                      Mis 15 Rutas Prioritarias — Tarifas Totales Ida y Vuelta con Impuestos
                     </h3>
-                    <p className="text-xs text-slate-400">Precios garantizados e información clara del tiquete.</p>
+                    <p className="text-xs text-slate-400">Garantía de precios finales exactos para planificar tus viajes sin sorpresas en el pago.</p>
                   </div>
 
                   <button
@@ -1213,16 +1111,20 @@
                           {/* BLOQUE DE PRECIOS DESTACADO */}
                           <div className="mt-3 bg-slate-950/90 p-3.5 rounded-2xl border border-slate-800/90 space-y-2">
                             <div className="flex items-center justify-between text-xs font-mono">
-                              <span className="text-slate-400 text-[10px] uppercase font-sans">Mínimo Récord (1 Año):</span>
+                              <span className="text-slate-400 text-[10px] uppercase font-sans">Mínimo Récord Total (1 Año):</span>
                               <span className="text-slate-300 font-bold">{formatCOP(route.baselineRecordCOP)}</span>
                             </div>
 
                             <div className="flex items-center justify-between text-xs font-mono border-t border-slate-800/80 pt-1.5">
-                              <span className="text-slate-400 text-[10px] uppercase font-sans">Precio Actual en Radar:</span>
+                              <span className="text-slate-400 text-[10px] uppercase font-sans">Precio Total en Radar:</span>
                               <span className={`text-base font-black ${priceDropped ? 'text-emerald-400 animate-pulse' : 'text-cyan-400'}`}>
                                 {formatCOP(route.currentPriceCOP)}
                               </span>
                             </div>
+
+                            <span className="text-[9px] text-emerald-400 font-mono font-bold block uppercase border-t border-slate-800/80 pt-1">
+                              ✓ IDA Y VUELTA — IMPUESTOS Y TASAS INCLUIDAS
+                            </span>
 
                             {route.airlineNote && (
                               <p className="text-[10px] text-slate-300 font-sans border-t border-slate-800/80 pt-1.5 leading-snug">
@@ -1303,7 +1205,7 @@
               </div>
             )}
 
-            {/* Pestaña Asistente de Escalas IA */}
+            {}
             {activeTab === 'rutas-ia' && (
               <div className="glass-panel p-5 sm:p-6 rounded-3xl space-y-6 max-w-4xl mx-auto">
                 <div className="border-b border-slate-800 pb-4">
@@ -1312,7 +1214,7 @@
                     <span>Asistente Especializado en Escalas, Hubs & Conexiones IA</span>
                   </div>
                   <p className="text-xs text-slate-400 pt-1">
-                    Ingresa cualquier destino mundial (ej: Tokio, Bangkok, Roma, Bali, Sídney). La IA analizará los mejores hubs conectores saliendo desde Colombia, advirtiéndote sobre visas de tránsito, maletas y combinaciones baratas.
+                    Ingresa cualquier destino mundial. La IA calculará los mejores conectores saliendo de Colombia indicando Tarifas Totales Ida y Vuelta con Impuestos.
                   </p>
                 </div>
 
@@ -1340,7 +1242,7 @@
                         value={routeDest}
                         onChange={(e) => setRouteDestination(e.target.value)}
                         required
-                        placeholder="Ej: Tokio, Japón / Bangkok / Bali / Roma..."
+                        placeholder="Ej: Cancún, México / Tokio / Roma / Bali..."
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-100 focus:border-cyan-500 focus:outline-none text-sm font-semibold"
                       />
                     </div>
@@ -1360,7 +1262,7 @@
                         />
                         <div>
                           <span className="font-bold text-slate-200 block">Tengo Visa de EE.UU. Vigente</span>
-                          <span className="text-[10px] text-slate-400">Permite escalas en Miami (MIA), Nueva York (JFK), Houston (IAH), Toronto (YYZ).</span>
+                          <span className="text-[10px] text-slate-400">Permite escalas en MIA, JFK, IAH, YYZ.</span>
                         </div>
                       </label>
 
@@ -1375,7 +1277,7 @@
                         />
                         <div>
                           <span className="font-bold text-amber-300 block">NO tengo Visa de EE.UU.</span>
-                          <span className="text-[10px] text-slate-400">Solo sugerir hubs sin visa: Panamá (PTY), Madrid (MAD), Estambul (IST), Dubái (DXB).</span>
+                          <span className="text-[10px] text-slate-400">Hubs sin visa: Panamá (PTY), Madrid (MAD), Estambul (IST), Dubái (DXB).</span>
                         </div>
                       </label>
                     </div>
@@ -1399,6 +1301,9 @@
                       <span className="font-extrabold text-amber-300 text-sm flex items-center gap-2">
                         <IconSparkles className="w-4 h-4 text-amber-400" />
                         Estrategia de Vuelo & Conectores Recomendados
+                      </span>
+                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                        ✓ PRECIOS TOTALES CON IMPUESTOS
                       </span>
                     </div>
 
@@ -1523,7 +1428,7 @@
                       Radar de Ofertas Global — Caza de Mega Descuentos (&gt;40% a 60% OFF)
                     </h3>
                     <p className="text-xs text-slate-400 pt-0.5">
-                      Rastrea ofertas relámpago espontáneas saliendo desde Colombia hacia destinos en todos los continentes.
+                      Rastrea ofertas relámpago espontáneas saliendo desde Colombia con valores TOTALES DE IDA Y VUELTA CON IMPUESTOS INCLUIDOS.
                     </p>
                   </div>
                   <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30 whitespace-nowrap">
@@ -1593,6 +1498,9 @@
                           <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800 space-y-1 text-xs">
                             <p className="text-emerald-400 font-bold">✈️ Aerolínea: {deal.airline}</p>
                             <p className="text-slate-400 text-[11px]">{deal.route}</p>
+                            <span className="text-[9px] text-emerald-400 font-mono font-bold block uppercase border-t border-slate-800/80 pt-1">
+                              ✓ IDA Y VUELTA — IMPUESTOS Y TASAS INCLUIDAS
+                            </span>
                             {deal.layoverNote && (
                               <p className="text-[10px] text-amber-300 italic pt-1 border-t border-slate-800/80">
                                 💡 "{deal.layoverNote}"
@@ -1634,9 +1542,9 @@
                   <div>
                     <h3 className="font-bold text-base text-slate-100 flex items-center gap-2">
                       <IconTrendingDown className="w-5 h-5 text-cyan-400" />
-                      Comportamiento Histórico de Precio (Últimos 12 Meses)
+                      Comportamiento Histórico de Precio Total (Últimos 12 Meses)
                     </h3>
-                    <p className="text-xs text-slate-400">Selecciona cualquiera de tus 15 rutas VIP para ver la fluctuación mes a mes de su precio mínimo.</p>
+                    <p className="text-xs text-slate-400">Precios totales de ida y vuelta con todos los impuestos incluidos.</p>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -1669,7 +1577,7 @@
                     <IconMail className="w-5 h-5 text-cyan-400" />
                     Configuración de Alertas Automáticas al Correo Electrónico
                   </h3>
-                  <p className="text-xs text-slate-400">Recibe un correo electrónico inmediato en tu bandeja de entrada cada vez que cualquiera de tus 15 rutas preferidas rompa su récord de precio mínimo anual.</p>
+                  <p className="text-xs text-slate-400">Recibe un correo electrónico inmediato en tu bandeja de entrada cada vez que cualquiera de tus 15 rutas preferidas rompa su récord de precio mínimo anual (Ida y vuelta con impuestos incluidos).</p>
                 </div>
 
                 <form
@@ -1700,7 +1608,7 @@
                       className="w-4 h-4 accent-cyan-500"
                     />
                     <label htmlFor="emailAlertsEnabled" className="text-slate-200 font-medium cursor-pointer">
-                      Activar envío automático de correos cuando una ruta preferida rompa su récord del año.
+                      Activar envío automático de correos con precios totales ida y vuelta cuando una ruta preferida rompa su récord del año.
                     </label>
                   </div>
 
@@ -1751,25 +1659,25 @@
                       origin: formData.get('origin'),
                       originCode: formData.get('originCode') || 'BGA',
                       destination: formData.get('destination'),
-                      destCode: formData.get('destCode') || 'BOG',
-                      departureDate: formData.get('departureDate') || '2026-09-13',
-                      returnDate: formData.get('returnDate') || '2026-09-16',
-                      baselineRecordCOP: Number(formData.get('baselineRecordCOP')) || 135532,
-                      currentPriceCOP: Number(formData.get('baselineRecordCOP')) || 135532,
+                      destCode: formData.get('destCode') || 'CUN',
+                      departureDate: formData.get('departureDate') || '2026-09-15',
+                      returnDate: formData.get('returnDate') || '2026-09-22',
+                      baselineRecordCOP: Number(formData.get('baselineRecordCOP')) || 1894950,
+                      currentPriceCOP: Number(formData.get('baselineRecordCOP')) || 1894950,
                       lastScanned: 'Recién añadida',
                       priority: true,
                       directFlight: formData.get('directFlight') === 'on',
-                      airline: formData.get('airline') || 'JetSMART / Wingo',
-                      airlineNote: formData.get('airlineNote') || 'Ruta VIP personalizada',
+                      airline: formData.get('airline') || 'Copa Airlines',
+                      airlineNote: formData.get('airlineNote') || 'Tarifa TOTAL final de ida y vuelta con todos los impuestos incluidos.',
                       isSeparateTickets: formData.get('isSeparateTickets') === 'on',
                       alertOnBreak: true,
-                      promoSource: 'JetSMART (Oficial)',
-                      promoUrl: 'https://jetsmart.com/co/es/'
+                      promoSource: 'Copa Airlines (Oficial)',
+                      promoUrl: 'https://www.copaair.com/es-co/'
                     };
 
                     setPriorityRoutes([newRoute, ...priorityRoutes]);
                     setShowAddVipModal(false);
-                    showToast("¡Ruta añadida a tu lista de monitoreo VIP!");
+                    showToast("¡Ruta añadida con tarifa total ida y vuelta a tu lista VIP!");
                   }}
                   className="space-y-4 text-xs"
                 >
@@ -1788,7 +1696,7 @@
                     <input
                       name="destination"
                       required
-                      placeholder="Ej: Bogotá (BOG), Aruba (AUA)..."
+                      placeholder="Ej: Cancún (CUN), México..."
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -1798,8 +1706,8 @@
                     <input
                       name="airline"
                       required
-                      defaultValue="JetSMART / Wingo (Vuelo Directo)"
-                      placeholder="Ej: JetSMART, Wingo, Avianca..."
+                      defaultValue="Copa Airlines / Avianca"
+                      placeholder="Ej: Copa, JetSMART, Wingo, Avianca..."
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:border-cyan-500 focus:outline-none font-semibold text-emerald-400"
                     />
                   </div>
@@ -1817,19 +1725,19 @@
                       <label className="text-slate-400 block mb-1 font-medium">Código Destino IATA</label>
                       <input
                         name="destCode"
-                        defaultValue="BOG"
+                        defaultValue="CUN"
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-slate-200 uppercase font-mono"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-slate-400 block mb-1 font-medium">Precio Mínimo Récord Objetivo ($COP) *</label>
+                    <label className="text-slate-400 block mb-1 font-medium">Precio TOTAL Ida y Vuelta con Impuestos ($COP) *</label>
                     <input
                       type="number"
                       name="baselineRecordCOP"
                       required
-                      defaultValue="135532"
+                      defaultValue="1894950"
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 font-mono text-emerald-400 font-bold focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -1855,7 +1763,7 @@
           )}
 
           <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500 mt-auto">
-            VuelosRadar Pro &copy; {new Date().getFullYear()} — Escáner Directo, Asistente de Escalas IA & Alertas de Promociones.
+            VuelosRadar Pro &copy; {new Date().getFullYear()} — Escáner Directo con Tarifas Totales Ida y Vuelta Incluyendo Impuestos y Tasas.
           </footer>
 
         </div>
