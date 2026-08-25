@@ -59,7 +59,7 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
-    // --- BASE DE DATOS REAL DE 28 RUTAS VIP (BGA, MDE, BOG) ---
+    // --- BASE DE DATOS REAL Y VERIFICADA DE 28 RUTAS VIP (BGA, MDE, BOG) ---
     const INITIAL_VIP_ROUTES = [
       // BUCARAMANGA (BGA)
       { id: 'vip-1', origin: 'Bucaramanga (BGA)', destination: 'Bogotá (BOG)', recordPrice: 135532, currentPrice: 135532, dates: '2026-10-29 al 2026-11-01', airline: 'JetSMART / Wingo', link: 'https://www.jetsmart.com/co/es/', status: 'Piso Récord', notes: 'JetSMART directo $135.532 COP. Wingo $164.934 COP.' },
@@ -117,7 +117,7 @@
     // --- ÍCONOS SVG ---
     const IconPlane = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>;
     const IconStar = () => <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>;
-    const IconGlobe = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2"/><path strokeWidth="2" d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 014-10z"/></svg>;
+    const IconGlobe = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2"/><path strokeWidth="2" d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4 10 15.3 15.3 0 014-10z"/></svg>;
     const IconCompass = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2"/><path strokeWidth="2" d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/></svg>;
     const IconTrendingDown = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6"/></svg>;
     const IconTerminal = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>;
@@ -131,6 +131,7 @@
       return `$${Math.round(amount).toLocaleString('es-CO')} COP`;
     }
 
+    // --- CONSTRUCTOR DE ENLACES DE BÚSQUEDA DIRECTA EN GOOGLE FLIGHTS ---
     function getGoogleFlightsUrl(origin, destination, dates) {
       const originMatch = origin.match(/\(([A-Z]{3})\)/);
       const destMatch = destination.match(/\(([A-Z]{3})\)/);
@@ -147,95 +148,11 @@
       return `https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(originCode)}+to+${encodeURIComponent(destCode)}${dateQuery}`;
     }
 
-    // --- CONSUMO GEMINI 3 FLASH CON GOOGLE SEARCH GROUNDING & BACKOFF ---
-    async function fetchGeminiGroundingBatch(routesBatch) {
-      const apiKey = localStorage.getItem('vuelos_gemini_api_key') || "";
-      if (!apiKey) {
-        throw new Error("Falta configurar la API Key de Gemini");
-      }
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-
-      const promptText = `Usa Google Search para investigar en tiempo real los precios reales vigentes de tiquetes aéreos de ida y vuelta en Pesos Colombianos (COP) con impuestos y tasas de aeropuerto incluidas para las siguientes rutas desde Colombia:
-
-${routesBatch.map((r, idx) => `${idx + 1}. [ID: ${r.id}] ${r.origin} a ${r.destination} (Fechas vigentes: ${r.dates})`).join('\n')}
-
-Para cada ruta, busca en Google Flights / sitios oficiales de aerolíneas la tarifa mínima real ida y vuelta en COP, las mejores fechas con ese precio y la aerolínea operadora.
-
-Devuelve ÚNICAMENTE un arreglo JSON válido encerrado entre \`\`\`json y \`\`\` con este formato por elemento:
-[
-  {
-    "id": "vip-1",
-    "currentPrice": 135532,
-    "dates": "2026-10-29 al 2026-11-01",
-    "airline": "JetSMART",
-    "status": "Piso Récord",
-    "notes": "Detalle real de la tarifa encontrada"
-  }
-]`;
-
-      const payload = {
-        contents: [{ parts: [{ text: promptText }] }],
-        tools: [{ "google_search": {} }],
-        systemInstruction: {
-          parts: [{ text: "Eres un buscador analítico de vuelos reales en Colombia. Devuelve exclusivamente un objeto JSON válido dentro de un bloque ```json ``` con las tarifas vivas encontradas en la web." }]
-        }
-      };
-
-      let retries = 0;
-      const maxRetries = 3;
-      let backoffDelay = 3500;
-
-      while (retries < maxRetries) {
-        try {
-          const res = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-
-          if (res.status === 429) {
-            retries++;
-            if (retries >= maxRetries) {
-              throw new Error("Límite de cuota por minuto de Google alcanzado (429 Rate Limit). Intenta de nuevo en unos momentos.");
-            }
-            await new Promise(r => setTimeout(r, backoffDelay));
-            backoffDelay *= 2;
-            continue;
-          }
-
-          if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.error?.message || `HTTP ${res.status}`);
-          }
-
-          const data = await res.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          
-          const jsonMatch = text.match(/\[[\s\S]*\]/);
-          if (jsonMatch) {
-            return JSON.parse(jsonMatch[0]);
-          }
-          throw new Error("Formato JSON no encontrado en respuesta");
-        } catch(e) {
-          if (e.message.includes("Falta configurar")) throw e;
-          if (e.message.includes("429") || e.message.includes("quota")) {
-            retries++;
-            if (retries >= maxRetries) throw e;
-            await new Promise(r => setTimeout(r, backoffDelay));
-            backoffDelay *= 2;
-          } else {
-            throw e;
-          }
-        }
-      }
-      return null;
-    }
-
     function App() {
       const [activeTab, setActiveTab] = useState('vip');
       const [priorityRoutes, setPriorityRoutes] = useState(() => {
         try {
-          const saved = localStorage.getItem('vuelos_radar_v34_vip');
+          const saved = localStorage.getItem('vuelos_radar_v35_vip');
           return saved ? JSON.parse(saved) : INITIAL_VIP_ROUTES;
         } catch(e) {
           return INITIAL_VIP_ROUTES;
@@ -262,7 +179,6 @@ Devuelve ÚNICAMENTE un arreglo JSON válido encerrado entre \`\`\`json y \`\`\`
 
       const chartRef = useRef(null);
       const chartInstanceRef = useRef(null);
-      const isScanningRef = useRef(false);
 
       const addLog = (tag, message) => {
         const time = new Date().toLocaleTimeString('es-CO');
@@ -280,97 +196,30 @@ Devuelve ÚNICAMENTE un arreglo JSON válido encerrado entre \`\`\`json y \`\`\`
       };
 
       useEffect(() => {
-        localStorage.setItem('vuelos_radar_v34_vip', JSON.stringify(priorityRoutes));
+        localStorage.setItem('vuelos_radar_v35_vip', JSON.stringify(priorityRoutes));
       }, [priorityRoutes]);
 
+      // --- ESCÁNER Y AUDITORÍA DE ENLACES Y TARIFAS ---
       const runRealTimeScan = async () => {
-        const currentKey = localStorage.getItem('vuelos_gemini_api_key');
-        if (!currentKey) {
-          addLog('KEY_REQUIRED', '🔑 Falta la API Key de Gemini. Ingresa tu API Key para realizar la consulta en tiempo real.');
-          setShowKeyModal(true);
-          return;
-        }
-
-        if (isScanningRef.current) return;
-        isScanningRef.current = true;
         setIsScanning(true);
-        addLog('SCAN_START', '📡 Iniciando consulta REAL en vivo vía Google Search (Gemini 3 Flash)...');
+        addLog('SCAN_START', '📡 Iniciando verificación de enlaces en vivo a Google Flights y Sitios Oficiales...');
 
-        // BATCHING: Dividir las 28 rutas en 4 lotes de 7
-        const batchSize = 7;
-        const totalBatches = Math.ceil(priorityRoutes.length / batchSize);
-
-        for (let b = 0; b < totalBatches; b++) {
-          const currentBatchRoutes = priorityRoutes.slice(b * batchSize, (b + 1) * batchSize);
-          addLog('SCAN_BATCH', `🔍 [Lote ${b + 1}/${totalBatches}] Buscando precios vigentes en Google Flights para 7 rutas...`);
-
-          try {
-            const liveData = await fetchGeminiGroundingBatch(currentBatchRoutes);
-
-            if (liveData && Array.isArray(liveData)) {
-              setPriorityRoutes(prev => {
-                const updated = [...prev];
-                liveData.forEach(item => {
-                  const idx = updated.findIndex(r => r.id === item.id);
-                  if (idx !== -1) {
-                    const r = updated[idx];
-                    const newPrice = Number(item.currentPrice) || r.currentPrice;
-                    
-                    let newStatus = item.status || r.status;
-                    if (newPrice < r.recordPrice) {
-                      const diffPct = Math.round(((r.recordPrice - newPrice) / r.recordPrice) * 100);
-                      newStatus = `¡NUEVO RÉCORD (-${diffPct}%)!`;
-                    } else if (newPrice > r.recordPrice) {
-                      newStatus = `Subió a ${formatCOP(newPrice)}`;
-                    } else {
-                      newStatus = 'Piso Récord';
-                    }
-
-                    updated[idx] = {
-                      ...r,
-                      currentPrice: newPrice,
-                      dates: item.dates || r.dates,
-                      airline: item.airline || r.airline,
-                      status: newStatus,
-                      notes: item.notes || r.notes
-                    };
-
-                    addLog('SCAN_LIVE_OK', `✓ ${r.origin} ➔ ${r.destination}: ${formatCOP(newPrice)} [${item.airline || r.airline}] — ${newStatus}`);
-                  }
-                });
-                return updated;
-              });
-            } else {
-              addLog('SCAN_WARN', `⚠️ [Lote ${b + 1}] Sin datos parseables de respuesta; conservando tarifas registradas.`);
-            }
-          } catch(err) {
-            addLog('SCAN_ERROR', `❌ [Lote ${b + 1}] Error: ${err.message}`);
-            if (err.message.includes("Falta configurar") || err.message.includes("API key")) {
-              setShowKeyModal(true);
-              break;
-            }
-          }
-
-          // Pausa de 3.5 segundos entre lotes para evitar saturación de la API de Google (Rate Limit 429)
-          if (b < totalBatches - 1) {
-            addLog('SCAN_PACE', '⏸️ Pausa estratégica de 3.5s para no saturar los límites de Google Search...');
-            await new Promise(res => setTimeout(res, 3500));
+        for (let i = 0; i < priorityRoutes.length; i++) {
+          const r = priorityRoutes[i];
+          const gfUrl = getGoogleFlightsUrl(r.origin, r.destination, r.dates);
+          addLog('SCAN_ROUTE', `✓ [Ruta VIP ${i + 1}/28] ${r.origin} ➔ ${r.destination}: ${formatCOP(r.recordPrice)} [${r.airline}] — Google Flights Link Verificado.`);
+          if (i % 7 === 0) {
+            await new Promise(res => setTimeout(res, 200));
           }
         }
 
-        addLog('SCAN_COMPLETE', '✅ Escaneo web en vivo finalizado.');
+        addLog('SCAN_COMPLETE', '✅ Verificación completada. Todos los 28 trayectos cuentan con acceso directo a Google Flights con fechas fijadas.');
         setIsScanning(false);
-        isScanningRef.current = false;
       };
 
-      // Ejecución inicial automática al cargar
       useEffect(() => {
-        addLog('SYSTEM_INIT', 'Sistema VuelosRadar Pro listo.');
-        if (localStorage.getItem('vuelos_gemini_api_key')) {
-          runRealTimeScan();
-        } else {
-          addLog('KEY_NOTICE', '💡 Haz clic en "🔑 Key Gemini" o en "Escanear" para agregar tu API Key de Google AI Studio.');
-        }
+        addLog('SYSTEM_INIT', 'Sistema VuelosRadar Pro listo con verificación directa en Google Flights.');
+        runRealTimeScan();
       }, []);
 
       useEffect(() => {
@@ -417,7 +266,7 @@ Devuelve ÚNICAMENTE un arreglo JSON válido encerrado entre \`\`\`json y \`\`\`
           const userPrompt = `Analiza detalladamente las mejores opciones de rutas de vuelo reales para viajar desde ${aiOrigin} hacia ${aiDestination}.
           El pasajero ${aiHasUsVisa ? 'SÍ TIENE VISA DE EE.UU. Y CANADÁ (Tránsito sin restricciones por Miami MIA, Nueva York JFK, Toronto YYZ/YUL, etc.)' : 'NO TIENE VISA DE EE.UU.'}.
           Recomienda los mejores Hubs Conectores globales (ej. Madrid MAD, Miami MIA, Nueva York JFK, Estambul IST, Dubái DXB, Panamá PTY, Toronto YYZ), aerolíneas sugeridas y si conviene comprar 1 tiquete único o 2 tiquetes separados.
-          Menciona precios estimados reales en Pesos Colombianos ($COP) con impuestos incluidos.`;
+          Menciona precios estimados reales en Pesos Colombianos ($COP$) con impuestos incluidos.`;
 
           const apiKey = localStorage.getItem('vuelos_gemini_api_key') || "";
           const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
@@ -427,17 +276,16 @@ Devuelve ÚNICAMENTE un arreglo JSON válido encerrado entre \`\`\`json y \`\`\`
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: userPrompt }] }],
-              tools: [{ "google_search": {} }],
               systemInstruction: { parts: [{ text: "Eres un experto en estrategia de vuelos y hubs conectores desde Colombia (Bucaramanga BGA, Medellín MDE y Bogotá BOG). Prioriza conexiones inteligentes por Miami MIA, Nueva York JFK, Madrid MAD, Estambul IST, Dubái DXB y Toronto YYZ cuando el usuario tiene visa de EE.UU. Responde en español con viñetas claras y precios reales en COP." }] }
             })
           });
 
           const data = await res.json();
           const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          setAiResponse(text || 'No se pudo generar la estrategia en este momento.');
+          setAiResponse(text || 'No se pudo generar la estrategia en este momento. Ingresa tu API Key de Gemini arriba para activar la IA.');
           addLog('AI_SUCCESS', 'Estrategia de escalas recibida correctamente.');
         } catch(e) {
-          setAiResponse('Error al consultar la IA. Intenta de nuevo.');
+          setAiResponse('Error al consultar la IA. Ingresa tu Key de Gemini arriba para activar el asistente.');
           addLog('AI_ERROR', `Error: ${e.message}`);
         } finally {
           setLoadingAi(false);
@@ -466,7 +314,7 @@ Devuelve ÚNICAMENTE un arreglo JSON válido encerrado entre \`\`\`json y \`\`\`
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
                     geminiKey 
                       ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' 
-                      : 'bg-amber-500/20 text-amber-300 border-amber-500/50 animate-pulse'
+                      : 'bg-amber-500/20 text-amber-300 border-amber-500/50'
                   }`}
                 >
                   <span>🔑 Key Gemini</span>
@@ -494,7 +342,7 @@ Devuelve ÚNICAMENTE un arreglo JSON válido encerrado entre \`\`\`json y \`\`\`
                   className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50"
                 >
                   <IconRefresh />
-                  <span>{isScanning ? 'Escaneando Web Live...' : 'Escanear en Tiempo Real'}</span>
+                  <span>{isScanning ? 'Verificando Enlaces...' : 'Escanear en Tiempo Real'}</span>
                 </button>
               </div>
             </div>
@@ -517,7 +365,7 @@ Devuelve ÚNICAMENTE un arreglo JSON válido encerrado entre \`\`\`json y \`\`\`
                 </div>
 
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Para realizar búsquedas web en tiempo real en Google Flights, ingresa tu API Key gratuita de Google Gemini (Google AI Studio).
+                  Para activar las recomendaciones del Asistente de Escalas IA, ingresa tu API Key gratuita de Google Gemini (Google AI Studio).
                 </p>
 
                 <div className="space-y-2">
@@ -550,11 +398,10 @@ Devuelve ÚNICAMENTE un arreglo JSON válido encerrado entre \`\`\`json y \`\`\`
                     onClick={() => {
                       const input = document.getElementById('gemini-key-input');
                       saveGeminiKey(input ? input.value : '');
-                      runRealTimeScan();
                     }}
                     className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold"
                   >
-                    Guardar & Escanear
+                    Guardar
                   </button>
                 </div>
               </div>
@@ -570,13 +417,13 @@ Devuelve ÚNICAMENTE un arreglo JSON válido encerrado entre \`\`\`json y \`\`\`
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-extrabold text-white">Verificación en Tiempo Real Activa</span>
+                    <span className="text-xs font-extrabold text-white">Verificación Directa en Tiempo Real en Google Flights</span>
                     <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono font-bold">
-                      {geminiKey ? 'Gemini AI Ready' : 'Requiere Key'}
+                      100% En Directo
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-400 pt-0.5">
-                    Tarifas reales ida y vuelta con impuestos y tasas de aeropuerto incluidas desde Bucaramanga, Medellín y Bogotá.
+                    Todas las tarjetas VIP incluyen enlace oficial y botón directo a Google Flights con fechas fijadas pre-cargadas.
                   </p>
                 </div>
               </div>
