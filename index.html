@@ -131,17 +131,36 @@
       return str.trim();
     }
 
-    function getGoogleFlightsUrl(origin, destination) {
+    function getGoogleFlightsUrl(origin, destination, date1, date2) {
       const originCode = extractAirportCode(origin);
       const destCode = extractAirportCode(destination);
+      if (date1 && date2) {
+        return `https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(originCode)}+to+${encodeURIComponent(destCode)}+on+${date1}+returning+${date2}`;
+      }
       return `https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(originCode)}+to+${encodeURIComponent(destCode)}`;
     }
 
-    function getKayakMultiCityUrl(origin, enterCity, exitCity) {
+    function getGoogleFlightsMultiCityUrl(origin, enterCity, exitCity, date1 = '2026-10-15', date2 = '2026-10-30') {
       const originCode = extractAirportCode(origin);
       const enterCode = extractAirportCode(enterCity);
       const exitCode = extractAirportCode(exitCity);
-      return `https://www.kayak.com.co/flights/${originCode}-${enterCode}/${exitCode}-${originCode}`;
+      return `https://www.google.com/travel/flights?q=flights+from+${originCode}+to+${enterCode}+on+${date1}+and+${exitCode}+to+${originCode}+on+${date2}`;
+    }
+
+    function getSkyscannerMultiCityUrl(origin, enterCity, exitCity, date1 = '2026-10-15', date2 = '2026-10-30') {
+      const originCode = extractAirportCode(origin).toLowerCase();
+      const enterCode = extractAirportCode(enterCity).toLowerCase();
+      const exitCode = extractAirportCode(exitCity).toLowerCase();
+      const d1 = date1.replace(/-/g, '').slice(2);
+      const d2 = date2.replace(/-/g, '').slice(2);
+      return `https://www.skyscanner.com.co/transporte/vuelos/${originCode}/${enterCode}/${d1}/?adultsv2=1&cabinclass=economy`;
+    }
+
+    function getKayakMultiCityUrl(origin, enterCity, exitCity, date1 = '2026-10-15', date2 = '2026-10-30') {
+      const originCode = extractAirportCode(origin);
+      const enterCode = extractAirportCode(enterCity);
+      const exitCode = extractAirportCode(exitCity);
+      return `https://www.kayak.com.co/flights/${originCode}-${enterCode}/${date1}/${exitCode}-${originCode}/${date2}`;
     }
 
     // --- BASE DE DATOS DE LAS 28 RUTAS VIP ---
@@ -223,10 +242,12 @@
       const [logs, setLogs] = useState([]);
       const [isScanning, setIsScanning] = useState(false);
 
-      // Multi-Destino Personalizado
+      // Multi-Destino Personalizado con Fechas Válidas
       const [customColOrigin, setCustomColOrigin] = useState('Bogotá (BOG)');
       const [customEnterCity, setCustomEnterCity] = useState('Copenhague (CPH)');
       const [customExitCity, setCustomExitCity] = useState('Atenas (ATH)');
+      const [customDate1, setCustomDate1] = useState('2026-10-15');
+      const [customDate2, setCustomDate2] = useState('2026-10-30');
 
       // Asistente IA
       const [aiDestination, setAiDestination] = useState('');
@@ -547,7 +568,7 @@ ${visaNotes}
                       <IconGlobe />
                       Diseñador de Ruta Multi-Destino Personalizada (Open-Jaw)
                     </h2>
-                    <p className="text-xs text-slate-400">Cotiza itinerarios multi-ciudad en Kayak y Google Flights sin regresar por el mismo aeropuerto.</p>
+                    <p className="text-xs text-slate-400">Compara en los 3 motores más baratos del mundo (Google Flights, Skyscanner y Kayak) sin páginas en blanco.</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -568,7 +589,7 @@ ${visaNotes}
                       <label className="text-[11px] text-slate-400 font-bold block mb-1">Ciudad Entrada / Inicio (A) *</label>
                       <input
                         type="text"
-                        placeholder="Ej: Copenhague (CPH), Singapur (SIN), Praga (PRG)..."
+                        placeholder="Ej: Copenhague (CPH), Singapur (SIN)..."
                         value={customEnterCity}
                         onChange={(e) => setCustomEnterCity(e.target.value)}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
@@ -579,7 +600,7 @@ ${visaNotes}
                       <label className="text-[11px] text-slate-400 font-bold block mb-1">Ciudad Salida / Regreso (B) *</label>
                       <input
                         type="text"
-                        placeholder="Ej: Atenas (ATH), Bangkok (BKK), Budapest (BUD)..."
+                        placeholder="Ej: Atenas (ATH), Bangkok (BKK)..."
                         value={customExitCity}
                         onChange={(e) => setCustomExitCity(e.target.value)}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
@@ -587,34 +608,79 @@ ${visaNotes}
                     </div>
                   </div>
 
-                  {/* BOTONES DIRECTOS PARA MULTI-CIUDAD Y TRAMOS SEPARADOS */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="text-[11px] text-slate-400 font-bold block mb-1">📅 Fecha Salida desde Colombia</label>
+                      <input
+                        type="date"
+                        value={customDate1}
+                        onChange={(e) => setCustomDate1(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-slate-400 font-bold block mb-1">📅 Fecha Regreso hacia Colombia</label>
+                      <input
+                        type="date"
+                        value={customDate2}
+                        onChange={(e) => setCustomDate2(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* BOTONES DIRECTOS MULTI-MOTOR */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
                     <a
-                      href={getKayakMultiCityUrl(customColOrigin, customEnterCity, customExitCity)}
+                      href={getGoogleFlightsMultiCityUrl(customColOrigin, customEnterCity, customExitCity, customDate1, customDate2)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-lg active:scale-95 text-center"
                     >
                       <IconGlobe />
-                      <span>Cotizar Open-Jaw en Kayak</span>
+                      <span>Google Flights Multi-Ciudad</span>
                       <IconExternalLink />
                     </a>
 
                     <a
-                      href={getGoogleFlightsUrl(customColOrigin, customEnterCity)}
+                      href={getKayakMultiCityUrl(customColOrigin, customEnterCity, customExitCity, customDate1, customDate2)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs transition-all border border-slate-700 active:scale-95 text-center"
+                      className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-lg active:scale-95 text-center"
+                    >
+                      <IconGlobe />
+                      <span>Cotizar en Kayak (Fechas Válidas)</span>
+                      <IconExternalLink />
+                    </a>
+
+                    <a
+                      href={getSkyscannerMultiCityUrl(customColOrigin, customEnterCity, customExitCity, customDate1, customDate2)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-lg active:scale-95 text-center"
+                    >
+                      <IconSearch />
+                      <span>Comparar en Skyscanner</span>
+                      <IconExternalLink />
+                    </a>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-800/80">
+                    <a
+                      href={getGoogleFlightsUrl(customColOrigin, customEnterCity, customDate1)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-xl text-xs transition-all border border-slate-700 active:scale-95 text-center"
                     >
                       <span>🛫 Tramo 1: {extractAirportCode(customColOrigin)} ➔ {extractAirportCode(customEnterCity)}</span>
                       <IconExternalLink />
                     </a>
 
                     <a
-                      href={getGoogleFlightsUrl(customExitCity, customColOrigin)}
+                      href={getGoogleFlightsUrl(customExitCity, customColOrigin, customDate2)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs transition-all border border-slate-700 active:scale-95 text-center"
+                      className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-xl text-xs transition-all border border-slate-700 active:scale-95 text-center"
                     >
                       <span>🛬 Tramo 2: {extractAirportCode(customExitCity)} ➔ {extractAirportCode(customColOrigin)}</span>
                       <IconExternalLink />
@@ -653,34 +719,34 @@ ${visaNotes}
 
                       <div className="pt-2 flex flex-col gap-2">
                         <a
-                          href={getKayakMultiCityUrl(oj.colOrigin, oj.enterCity, oj.exitCity)}
+                          href={getGoogleFlightsMultiCityUrl(oj.colOrigin, oj.enterCity, oj.exitCity, '2026-10-15', '2026-10-30')}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold py-2 px-3 rounded-xl text-xs transition-all shadow-md active:scale-95"
                         >
                           <IconGlobe />
-                          <span>Cotizar Open-Jaw en Kayak</span>
+                          <span>Google Flights Multi-Ciudad</span>
                           <IconExternalLink />
                         </a>
 
                         <div className="grid grid-cols-2 gap-2">
                           <a
-                            href={getGoogleFlightsUrl(oj.colOrigin, oj.enterCity)}
+                            href={getKayakMultiCityUrl(oj.colOrigin, oj.enterCity, oj.exitCity, '2026-10-15', '2026-10-30')}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-1.5 px-2 rounded-xl text-[11px] transition-all border border-slate-700 text-center"
+                            className="flex items-center justify-center gap-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold py-1.5 px-2 rounded-xl text-[11px] transition-all text-center"
                           >
-                            <span>🛫 Ida ({extractAirportCode(oj.enterCity)})</span>
+                            <span>Kayak Directo</span>
                             <IconExternalLink />
                           </a>
 
                           <a
-                            href={getGoogleFlightsUrl(oj.exitCity, oj.colOrigin)}
+                            href={getSkyscannerMultiCityUrl(oj.colOrigin, oj.enterCity, oj.exitCity, '2026-10-15', '2026-10-30')}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-1.5 px-2 rounded-xl text-[11px] transition-all border border-slate-700 text-center"
+                            className="flex items-center justify-center gap-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold py-1.5 px-2 rounded-xl text-[11px] transition-all text-center"
                           >
-                            <span>🛬 Vuelta ({extractAirportCode(oj.exitCity)})</span>
+                            <span>Skyscanner</span>
                             <IconExternalLink />
                           </a>
                         </div>
