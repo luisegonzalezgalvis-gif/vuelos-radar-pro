@@ -58,7 +58,93 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
-    // --- BASE DE DATOS DE LAS 28 RUTAS VIP (ORIGEN BGA, MDE, BOG) ---
+    // --- DICCIONARIO DE CIUDADES A CÓDIGOS IATA ---
+    const CITY_IATA_MAP = {
+      'copenhague': 'CPH',
+      'copenhagen': 'CPH',
+      'atenas': 'ATH',
+      'athens': 'ATH',
+      'venecia': 'VCE',
+      'venice': 'VCE',
+      'singapur': 'SIN',
+      'singapore': 'SIN',
+      'bangkok': 'BKK',
+      'oslo': 'OSL',
+      'praga': 'PRG',
+      'prague': 'PRG',
+      'budapest': 'BUD',
+      'lisboa': 'LIS',
+      'lisbon': 'LIS',
+      'roma': 'FCO',
+      'rome': 'FCO',
+      'madrid': 'MAD',
+      'barcelona': 'BCN',
+      'paris': 'CDG',
+      'parís': 'CDG',
+      'amsterdam': 'AMS',
+      'ámsterdam': 'AMS',
+      'londres': 'LHR',
+      'london': 'LHR',
+      'estambul': 'IST',
+      'istanbul': 'IST',
+      'dubai': 'DXB',
+      'dubái': 'DXB',
+      'tokio': 'NRT',
+      'tokyo': 'NRT',
+      'bali': 'DPS',
+      'cusco': 'CUZ',
+      'cuzco': 'CUZ',
+      'lima': 'LIM',
+      'santiago': 'SCL',
+      'buenos aires': 'EZE',
+      'miami': 'MIA',
+      'nueva york': 'JFK',
+      'new york': 'JFK',
+      'orlando': 'MCO',
+      'cancun': 'CUN',
+      'cancún': 'CUN',
+      'punta cana': 'PUJ',
+      'aruba': 'AUA',
+      'panama': 'PTY',
+      'panamá': 'PTY',
+      'mexico': 'MEX',
+      'méxico': 'MEX',
+      'bogota': 'BOG',
+      'bogotá': 'BOG',
+      'medellin': 'MDE',
+      'medellín': 'MDE',
+      'bucaramanga': 'BGA'
+    };
+
+    function extractAirportCode(str) {
+      if (!str) return 'BOG';
+      const match = str.match(/\(([A-Z]{3})\)/);
+      if (match) return match[1];
+      const cleaned = str.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      for (const [city, code] of Object.entries(CITY_IATA_MAP)) {
+        if (cleaned.includes(city) || city.includes(cleaned)) {
+          return code;
+        }
+      }
+      const words = str.trim().toUpperCase().replace(/[^A-Z]/g, '');
+      if (words.length === 3) return words;
+      return str.trim();
+    }
+
+    function getGoogleFlightsUrl(origin, destination) {
+      const originCode = extractAirportCode(origin);
+      const destCode = extractAirportCode(destination);
+      return `https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(originCode)}+to+${encodeURIComponent(destCode)}`;
+    }
+
+    function getKayakMultiCityUrl(origin, enterCity, exitCity) {
+      const originCode = extractAirportCode(origin);
+      const enterCode = extractAirportCode(enterCity);
+      const exitCode = extractAirportCode(exitCity);
+      return `https://www.kayak.com.co/flights/${originCode}-${enterCode}/${exitCode}-${originCode}`;
+    }
+
+    // --- BASE DE DATOS DE LAS 28 RUTAS VIP ---
     const INITIAL_VIP_ROUTES = [
       // BUCARAMANGA (BGA)
       { id: 'vip-1', origin: 'Bucaramanga (BGA)', destination: 'Bogotá (BOG)', recordPrice: 135532, dates: 'Fechas Flexibles / Oct - Nov 2026', airline: 'JetSMART / Wingo', link: 'https://www.jetsmart.com/co/es/', status: 'Piso Récord', notes: 'JetSMART directo $135.532 COP. Wingo $164.934 COP.' },
@@ -129,14 +215,6 @@
       return `$${Math.round(amount).toLocaleString('es-CO')} COP`;
     }
 
-    function getGoogleFlightsUrl(origin, destination) {
-      const originMatch = origin.match(/\(([A-Z]{3})\)/);
-      const destMatch = destination.match(/\(([A-Z]{3})\)/);
-      const originCode = originMatch ? originMatch[1] : origin.split(' ')[0];
-      const destCode = destMatch ? destMatch[1] : destination.split(' ')[0];
-      return `https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(originCode)}+to+${encodeURIComponent(destCode)}`;
-    }
-
     function App() {
       const [activeTab, setActiveTab] = useState('vip');
       const [priorityRoutes, setPriorityRoutes] = useState(INITIAL_VIP_ROUTES);
@@ -147,8 +225,8 @@
 
       // Multi-Destino Personalizado
       const [customColOrigin, setCustomColOrigin] = useState('Bogotá (BOG)');
-      const [customEnterCity, setCustomEnterCity] = useState('');
-      const [customExitCity, setCustomExitCity] = useState('');
+      const [customEnterCity, setCustomEnterCity] = useState('Copenhague (CPH)');
+      const [customExitCity, setCustomExitCity] = useState('Atenas (ATH)');
 
       // Asistente IA
       const [aiDestination, setAiDestination] = useState('');
@@ -191,7 +269,7 @@
           await new Promise(res => setTimeout(res, 40));
         }
 
-        addLog('SCAN_COMPLETE', '✅ Escaneo completado. 40 trayectos auditados con enlaces en vivo a Google Flights y aerolíneas oficiales.');
+        addLog('SCAN_COMPLETE', '✅ Escaneo completado. 40 trayectos auditados con enlaces en vivo a Google Flights, Kayak y aerolíneas oficiales.');
         setIsScanning(false);
       };
 
@@ -320,11 +398,11 @@ ${visaNotes}
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-extrabold text-white">Verificación en Tiempo Real con Calendario Libre</span>
                     <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono font-bold">
-                      Google Flights Live
+                      Google Flights & Kayak Live
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-400 pt-0.5">
-                    Todas las tarjetas VIP te permiten comprar directo o explorar en Google Flights la matriz completa de fechas para hallar la tarifa piso.
+                    Todas las tarjetas te permiten comparar tarifas directas en aerolíneas oficiales, explorar fechas en Google Flights o cotizar multi-ciudad en Kayak sin pantallas en blanco.
                   </p>
                 </div>
               </div>
@@ -469,7 +547,7 @@ ${visaNotes}
                       <IconGlobe />
                       Diseñador de Ruta Multi-Destino Personalizada (Open-Jaw)
                     </h2>
-                    <p className="text-xs text-slate-400">Cotiza itinerarios multi-ciudad en Google Flights sin regresar por el mismo aeropuerto.</p>
+                    <p className="text-xs text-slate-400">Cotiza itinerarios multi-ciudad en Kayak y Google Flights sin regresar por el mismo aeropuerto.</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -490,7 +568,7 @@ ${visaNotes}
                       <label className="text-[11px] text-slate-400 font-bold block mb-1">Ciudad Entrada / Inicio (A) *</label>
                       <input
                         type="text"
-                        placeholder="Ej: Venecia, Singapur, Praga..."
+                        placeholder="Ej: Copenhague (CPH), Singapur (SIN), Praga (PRG)..."
                         value={customEnterCity}
                         onChange={(e) => setCustomEnterCity(e.target.value)}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
@@ -501,7 +579,7 @@ ${visaNotes}
                       <label className="text-[11px] text-slate-400 font-bold block mb-1">Ciudad Salida / Regreso (B) *</label>
                       <input
                         type="text"
-                        placeholder="Ej: Atenas, Bangkok, Budapest..."
+                        placeholder="Ej: Atenas (ATH), Bangkok (BKK), Budapest (BUD)..."
                         value={customExitCity}
                         onChange={(e) => setCustomExitCity(e.target.value)}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
@@ -509,14 +587,36 @@ ${visaNotes}
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-2">
+                  {/* BOTONES DIRECTOS PARA MULTI-CIUDAD Y TRAMOS SEPARADOS */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
                     <a
-                      href={`https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(customColOrigin)}+to+${encodeURIComponent(customEnterCity)}+and+${encodeURIComponent(customExitCity)}+to+${encodeURIComponent(customColOrigin)}`}
+                      href={getKayakMultiCityUrl(customColOrigin, customEnterCity, customExitCity)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-lg active:scale-95"
+                      className="flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-lg active:scale-95 text-center"
                     >
-                      <span>Cotizar Ruta en Google Flights Multi-Ciudad</span>
+                      <IconGlobe />
+                      <span>Cotizar Open-Jaw en Kayak</span>
+                      <IconExternalLink />
+                    </a>
+
+                    <a
+                      href={getGoogleFlightsUrl(customColOrigin, customEnterCity)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs transition-all border border-slate-700 active:scale-95 text-center"
+                    >
+                      <span>🛫 Tramo 1: {extractAirportCode(customColOrigin)} ➔ {extractAirportCode(customEnterCity)}</span>
+                      <IconExternalLink />
+                    </a>
+
+                    <a
+                      href={getGoogleFlightsUrl(customExitCity, customColOrigin)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs transition-all border border-slate-700 active:scale-95 text-center"
+                    >
+                      <span>🛬 Tramo 2: {extractAirportCode(customExitCity)} ➔ {extractAirportCode(customColOrigin)}</span>
                       <IconExternalLink />
                     </a>
                   </div>
@@ -551,16 +651,39 @@ ${visaNotes}
                         </p>
                       </div>
 
-                      <div className="pt-2">
+                      <div className="pt-2 flex flex-col gap-2">
                         <a
-                          href={`https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(oj.colOrigin)}+to+${encodeURIComponent(oj.enterCity)}+and+${encodeURIComponent(oj.exitCity)}+to+${encodeURIComponent(oj.colOrigin)}`}
+                          href={getKayakMultiCityUrl(oj.colOrigin, oj.enterCity, oj.exitCity)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 px-3 rounded-xl text-xs transition-all border border-slate-700"
+                          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold py-2 px-3 rounded-xl text-xs transition-all shadow-md active:scale-95"
                         >
-                          <span>Buscar Open-Jaw en Google Flights</span>
+                          <IconGlobe />
+                          <span>Cotizar Open-Jaw en Kayak</span>
                           <IconExternalLink />
                         </a>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <a
+                            href={getGoogleFlightsUrl(oj.colOrigin, oj.enterCity)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-1.5 px-2 rounded-xl text-[11px] transition-all border border-slate-700 text-center"
+                          >
+                            <span>🛫 Ida ({extractAirportCode(oj.enterCity)})</span>
+                            <IconExternalLink />
+                          </a>
+
+                          <a
+                            href={getGoogleFlightsUrl(oj.exitCity, oj.colOrigin)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-1.5 px-2 rounded-xl text-[11px] transition-all border border-slate-700 text-center"
+                          >
+                            <span>🛬 Vuelta ({extractAirportCode(oj.exitCity)})</span>
+                            <IconExternalLink />
+                          </a>
+                        </div>
                       </div>
                     </div>
                   ))}
