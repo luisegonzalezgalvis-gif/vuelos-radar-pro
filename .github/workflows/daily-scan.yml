@@ -1,13 +1,16 @@
 steps:
   - name: Despachar Alerta a Correo
+    shell: python
     run: |
-      python3 -c "
-      import urllib.request, json, ssl, sys
+      import urllib.request
+      import json
+      import ssl
+      import sys
 
-      email = 'luis.e.gonzalezgalvis0523@gmail.com'
-      endpoint = 'https://formsubmit.co/ajax/' + email
+      email = "luis.e.gonzalezgalvis0523@gmail.com"
+      endpoint = f"https://formsubmit.co/ajax/{email}"
 
-      reporte = '''=======================================================
+      reporte = """=======================================================
       ✈️ VUELOSRADAR PRO - INFORME MATUTINO (7:00 AM COT)
       Destinatario: luis.e.gonzalezgalvis0523@gmail.com
       Precios: TOTALES IDA Y VUELTA CON IMPUESTOS INCLUIDOS
@@ -46,22 +49,22 @@ steps:
       • BOG -> Estambul (IST): $3.680.000 COP | Turkish Airlines Directo | Piso Récord
       • BOG -> Dubái (DXB): $4.250.000 COP | Emirates | Piso Récord
       • BOG -> Bombay (BOM): $4.650.000 COP | Qatar Airways / Emirates | Piso Récord
-      '''
+      """
 
       data = json.dumps({
-          'name': 'VuelosRadar Pro Bot',
-          '_subject': '✈️ VuelosRadar Pro: Informe Matutino 7:00 AM COT',
-          'message': reporte,
-          '_captcha': 'false'
-      }).encode('utf-8')
+          "name": "VuelosRadar Pro Bot",
+          "_subject": "✈️ VuelosRadar Pro: Informe Matutino 7:00 AM COT",
+          "message": reporte,
+          "_captcha": "false"
+      }).encode("utf-8")
 
       req = urllib.request.Request(
           endpoint,
           data=data,
           headers={
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'User-Agent': 'Mozilla/5.0'
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+              "User-Agent": "Mozilla/5.0"
           }
       )
 
@@ -70,11 +73,9 @@ steps:
           ctx.check_hostname = False
           ctx.verify_mode = ssl.CERT_NONE
           with urllib.request.urlopen(req, context=ctx, timeout=30) as resp:
-              print('Status HTTP:', resp.status)
-              print('Alerta despachada correctamente.')
+              print("Status HTTP:", resp.status)
+              print("Alerta despachada correctamente.")
       except Exception as e:
-          print('Registro de despacho:', e)
+          print("Registro de despacho:", e)
 
       sys.exit(0)
-      "
-      echo "Proceso completado exitosamente."
