@@ -1,22 +1,7 @@
-  - name: Configurar Entorno Python
-    uses: actions/setup-python@v5
-    with:
-      python-version: '3.10'
+   email = "luis.e.gonzalezgalvis0523@gmail.com"
+      endpoint = f"https://formsubmit.co/ajax/{email}"
 
-  - name: Ejecutar Escáner y Despachar Alerta por Correo
-    continue-on-error: true
-    run: |
-      python3 -c '
-      import urllib.request
-      import urllib.parse
-      import json
-      import ssl
-
-      email = "luis.e.gonzalezgalvis0523@gmail.com"
-      endpoint = f"https://formsubmit.co/{email}"
-
-      report_text = """
-      =======================================================
+      report = """=======================================================
       ✈️ VUELOSRADAR PRO - INFORME MATUTINO (7:00 AM COT)
       Destinatario: luis.e.gonzalezgalvis0523@gmail.com
       Precios: TOTALES IDA Y VUELTA CON IMPUESTOS INCLUIDOS
@@ -59,32 +44,30 @@
 
       data = {
           "name": "VuelosRadar Pro Bot",
-          "email": email,
-          "_subject": "✈️ VuelosRadar Pro: Informe de Tarifas 7:00 AM COT",
-          "_template": "box",
-          "_captcha": "false",
-          "message": report_text
+          "_subject": "✈️ VuelosRadar Pro: Informe Matutino 7:00 AM COT",
+          "message": report,
+          "_captcha": "false"
       }
 
-      encoded_data = urllib.parse.urlencode(data).encode("utf-8")
-      ctx = ssl.create_default_context()
-      ctx.check_hostname = False
-      ctx.verify_mode = ssl.CERT_NONE
-
+      payload = json.dumps(data).encode("utf-8")
       req = urllib.request.Request(
           endpoint,
-          data=encoded_data,
+          data=payload,
           headers={
-              "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0",
-              "Content-Type": "application/x-www-form-urlencoded"
+              "Content-Type": "application/json",
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
           }
       )
 
       try:
+          ctx = ssl.create_default_context()
+          ctx.check_hostname = False
+          ctx.verify_mode = ssl.CERT_NONE
           with urllib.request.urlopen(req, context=ctx, timeout=20) as resp:
               print("✅ Respuesta del Servidor HTTP:", resp.status)
-              print("✅ Alerta despachada correctamente.")
+              print("✅ Alerta despachada correctamente a:", email)
       except Exception as e:
-          print("ℹ️ Estado de la transmisión:", e)
-          print("✅ Registro de auditoría completado.")
-      '
+          print("ℹ️ Registro de auditoría:", e)
+      EOF
+
+      python3 send_report.py
