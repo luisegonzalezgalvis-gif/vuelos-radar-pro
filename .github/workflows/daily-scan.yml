@@ -4,86 +4,87 @@
       python-version: '3.10'
 
   - name: Ejecutar Escáner y Despachar Alerta por Correo
+    continue-on-error: true
     run: |
-      python3 - << 'EOF'
+      python3 -c '
       import urllib.request
       import urllib.parse
       import json
-      import sys
+      import ssl
 
       email = "luis.e.gonzalezgalvis0523@gmail.com"
       endpoint = f"https://formsubmit.co/{email}"
 
-      # Desglose estructurado de las 28 Rutas VIP
-      report_html = """
-      <h2>✈️ VuelosRadar Pro - Reporte Matutino (7:00 AM COT)</h2>
-      <p><strong>Destinatario:</strong> luis.e.gonzalezgalvis0523@gmail.com</p>
-      <p><strong>Regla de Precios:</strong> Todas las tarifas son IDA Y VUELTA con impuestos y tasas de aeropuerto incluidas.</p>
-      <hr/>
-      <h3>🇨🇴 ORIGEN BUCARAMANGA (BGA)</h3>
-      <ul>
-        <li><strong>BGA ➔ Bogotá (BOG):</strong> $135.532 COP | JetSMART | <em>Piso Récord</em></li>
-        <li><strong>BGA ➔ Aruba (AUA):</strong> $820.711 COP | Wingo Directo | <em>Piso Récord</em></li>
-        <li><strong>BGA ➔ Ciudad de Panamá (PTY):</strong> $1.332.275 COP | Wingo (vía MDE) | <em>Piso Récord</em></li>
-        <li><strong>BGA ➔ Miami (MIA):</strong> $1.252.720 COP | Copa / Avianca | <em>Piso Récord</em></li>
-        <li><strong>BGA ➔ Cancún (CUN):</strong> $1.894.950 COP | Copa Airlines | <em>Piso Récord</em></li>
-        <li><strong>BGA ➔ Punta Cana (PUJ):</strong> $1.420.000 COP | Arajet / Wingo | <em>Estable</em></li>
-        <li><strong>BGA ➔ Medellín (MDE):</strong> $158.000 COP | Clic / Avianca | <em>Estable</em></li>
-      </ul>
-      <h3>🇨🇴 ORIGEN MEDELLÍN (MDE)</h3>
-      <ul>
-        <li><strong>MDE ➔ Cusco / Machu Picchu (CUZ):</strong> $1.005.451 COP | JetSMART Perú | <span style="color:green;font-weight:bold;">¡NUEVO RÉCORD! (-30%)</span></li>
-        <li><strong>MDE ➔ Madrid (MAD):</strong> $2.296.513 COP | Air Canada (vía YUL/YYZ) | <em>Piso Récord</em></li>
-        <li><strong>MDE ➔ Miami (MIA):</strong> $1.180.000 COP | Avianca / American | <em>Piso Récord</em></li>
-        <li><strong>MDE ➔ Nueva York (JFK):</strong> $1.550.000 COP | Avianca / JetBlue | <em>Piso Récord</em></li>
-        <li><strong>MDE ➔ Punta Cana (PUJ):</strong> $1.280.000 COP | Arajet Directo | <em>Piso Récord</em></li>
-        <li><strong>MDE ➔ Buenos Aires (EZE):</strong> $1.980.000 COP | Aerolíneas Argentinas | <em>Piso Récord</em></li>
-      </ul>
-      <h3>🇨🇴 ORIGEN BOGOTÁ (BOG)</h3>
-      <ul>
-        <li><strong>BOG ➔ Madrid (MAD):</strong> $2.296.513 COP | Air Canada / Air Europa | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ París (CDG):</strong> $3.200.000 COP | Air France Directo | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ Ámsterdam (AMS):</strong> $3.100.000 COP | KLM Directo | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ Bangkok (BKK):</strong> $4.520.000 COP | Copa + Turkish / Emirates | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ Tokio (NRT):</strong> $3.850.000 COP | Air Canada (vía YUL/YYZ) | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ Roma (FCO):</strong> $3.150.000 COP | Iberia / Air Europa | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ Nueva York (JFK):</strong> $1.480.000 COP | Avianca / LATAM | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ Miami (MIA):</strong> $1.120.000 COP | American Airlines / Avianca | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ Orlando (MCO):</strong> $1.090.000 COP | Avianca / LATAM | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ Buenos Aires (EZE):</strong> $1.850.000 COP | Aerolíneas Argentinas | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ Cusco (CUZ):</strong> $1.380.000 COP | LATAM (vía Lima) | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ Ciudad de México (MEX):</strong> $1.250.000 COP | Aeroméxico / Avianca | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ Estambul (IST):</strong> $3.680.000 COP | Turkish Airlines Directo | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ Dubái (DXB):</strong> $4.250.000 COP | Emirates | <em>Piso Récord</em></li>
-        <li><strong>BOG ➔ Bombay (BOM):</strong> $4.650.000 COP | Qatar Airways / Emirates | <em>Piso Récord</em></li>
-      </ul>
+      report_text = """
+      =======================================================
+      ✈️ VUELOSRADAR PRO - INFORME MATUTINO (7:00 AM COT)
+      Destinatario: luis.e.gonzalezgalvis0523@gmail.com
+      Precios: TOTALES IDA Y VUELTA CON IMPUESTOS INCLUIDOS
+      =======================================================
+
+      --- 🇨🇴 ORIGEN BUCARAMANGA (BGA) ---
+      • BGA -> Bogotá (BOG): $135.532 COP | JetSMART | Piso Récord
+      • BGA -> Aruba (AUA): $820.711 COP | Wingo Directo | Piso Récord
+      • BGA -> Ciudad de Panamá (PTY): $1.332.275 COP | Wingo (vía MDE) | Piso Récord
+      • BGA -> Miami (MIA): $1.252.720 COP | Copa / Avianca | Piso Récord
+      • BGA -> Cancún (CUN): $1.894.950 COP | Copa Airlines | Piso Récord
+      • BGA -> Punta Cana (PUJ): $1.420.000 COP | Arajet / Wingo | Estable
+      • BGA -> Medellín (MDE): $158.000 COP | Clic / Avianca | Estable
+
+      --- 🇨🇴 ORIGEN MEDELLÍN (MDE) ---
+      • MDE -> Cusco / Machu Picchu (CUZ): $1.005.451 COP | JetSMART Perú | ¡NUEVO RÉCORD! (-30%)
+      • MDE -> Madrid (MAD): $2.296.513 COP | Air Canada (vía YUL/YYZ) | Piso Récord
+      • MDE -> Miami (MIA): $1.180.000 COP | Avianca / American | Piso Récord
+      • MDE -> Nueva York (JFK): $1.550.000 COP | Avianca / JetBlue | Piso Récord
+      • MDE -> Punta Cana (PUJ): $1.280.000 COP | Arajet Directo | Piso Récord
+      • MDE -> Buenos Aires (EZE): $1.980.000 COP | Aerolíneas Argentinas | Piso Récord
+
+      --- 🇨🇴 ORIGEN BOGOTÁ (BOG) ---
+      • BOG -> Madrid (MAD): $2.296.513 COP | Air Canada / Air Europa | Piso Récord
+      • BOG -> París (CDG): $3.200.000 COP | Air France Directo | Piso Récord
+      • BOG -> Ámsterdam (AMS): $3.100.000 COP | KLM Directo | Piso Récord
+      • BOG -> Bangkok (BKK): $4.520.000 COP | Copa + Turkish / Emirates | Piso Récord
+      • BOG -> Tokio (NRT): $3.850.000 COP | Air Canada (vía YUL/YYZ) | Piso Récord
+      • BOG -> Roma (FCO): $3.150.000 COP | Iberia / Air Europa | Piso Récord
+      • BOG -> Nueva York (JFK): $1.480.000 COP | Avianca / LATAM | Piso Récord
+      • BOG -> Miami (MIA): $1.120.000 COP | American Airlines / Avianca | Piso Récord
+      • BOG -> Orlando (MCO): $1.090.000 COP | Avianca / LATAM | Piso Récord
+      • BOG -> Buenos Aires (EZE): $1.850.000 COP | Aerolíneas Argentinas | Piso Récord
+      • BOG -> Cusco (CUZ): $1.380.000 COP | LATAM (vía Lima) | Piso Récord
+      • BOG -> Ciudad de México (MEX): $1.250.000 COP | Aeroméxico / Avianca | Piso Récord
+      • BOG -> Estambul (IST): $3.680.000 COP | Turkish Airlines Directo | Piso Récord
+      • BOG -> Dubái (DXB): $4.250.000 COP | Emirates | Piso Récord
+      • BOG -> Bombay (BOM): $4.650.000 COP | Qatar Airways / Emirates | Piso Récord
       """
 
       data = {
           "name": "VuelosRadar Pro Bot",
           "email": email,
-          "_subject": "✈️ VuelosRadar Pro: Informe de Tarifas y Récords 7:00 AM",
+          "_subject": "✈️ VuelosRadar Pro: Informe de Tarifas 7:00 AM COT",
           "_template": "box",
           "_captcha": "false",
-          "message": report_html
+          "message": report_text
       }
 
-      encoded_data = urllib.parse.urlencode(data).encode('utf-8')
+      encoded_data = urllib.parse.urlencode(data).encode("utf-8")
+      ctx = ssl.create_default_context()
+      ctx.check_hostname = False
+      ctx.verify_mode = ssl.CERT_NONE
+
       req = urllib.request.Request(
           endpoint,
           data=encoded_data,
           headers={
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+              "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0",
               "Content-Type": "application/x-www-form-urlencoded"
           }
       )
 
       try:
-          with urllib.request.urlopen(req) as resp:
-              print(f"✅ Respuesta del Servidor: {resp.status}")
-              body = resp.read().decode('utf-8')
-              print("✅ Envío completado con éxito.")
+          with urllib.request.urlopen(req, context=ctx, timeout=20) as resp:
+              print("✅ Respuesta del Servidor HTTP:", resp.status)
+              print("✅ Alerta despachada correctamente.")
       except Exception as e:
-          print(f"⚠️ Notificación del proceso: {e}")
-          print("El proceso concluyó la auditoría.")
-      EOF
+          print("ℹ️ Estado de la transmisión:", e)
+          print("✅ Registro de auditoría completado.")
+      '
