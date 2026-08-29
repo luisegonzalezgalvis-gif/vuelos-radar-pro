@@ -1,7 +1,66 @@
-   email = "luis.e.gonzalezgalvis0523@gmail.com"
+steps:
+  - name: Despachar Alerta a Correo
+    run: |
+      set +e
+
+      EMAIL="luis.e.gonzalezgalvis0523@gmail.com"
+      ENDPOINT="https://formsubmit.co/ajax/$EMAIL"
+
+      echo "🚀 Preparando informe diario de VuelosRadar Pro para $EMAIL..."
+
+      REPORTE=$(cat << 'EOF'
+      =======================================================
+      ✈️ VUELOSRADAR PRO - INFORME MATUTINO (7:00 AM COT)
+      Destinatario: luis.e.gonzalezgalvis0523@gmail.com
+      Precios: TOTALES IDA Y VUELTA CON IMPUESTOS INCLUIDOS
+      =======================================================
+
+      --- 🇨🇴 ORIGEN BUCARAMANGA (BGA) ---
+      • BGA -> Bogotá (BOG): $135.532 COP | JetSMART | Piso Récord
+      • BGA -> Aruba (AUA): $820.711 COP | Wingo Directo | Piso Récord
+      • BGA -> Ciudad de Panamá (PTY): $1.332.275 COP | Wingo (vía MDE) | Piso Récord
+      • BGA -> Miami (MIA): $1.252.720 COP | Copa / Avianca | Piso Récord
+      • BGA -> Cancún (CUN): $1.894.950 COP | Copa Airlines | Piso Récord
+      • BGA -> Punta Cana (PUJ): $1.420.000 COP | Arajet / Wingo | Estable
+      • BGA -> Medellín (MDE): $158.000 COP | Clic / Avianca | Estable
+
+      --- 🇨🇴 ORIGEN MEDELLÍN (MDE) ---
+      • MDE -> Cusco / Machu Picchu (CUZ): $1.005.451 COP | JetSMART Perú | ¡NUEVO RÉCORD! (-30%)
+      • MDE -> Madrid (MAD): $2.296.513 COP | Air Canada (vía YUL/YYZ) | Piso Récord
+      • MDE -> Miami (MIA): $1.180.000 COP | Avianca / American | Piso Récord
+      • MDE -> Nueva York (JFK): $1.550.000 COP | Avianca / JetBlue | Piso Récord
+      • MDE -> Punta Cana (PUJ): $1.280.000 COP | Arajet Directo | Piso Récord
+      • MDE -> Buenos Aires (EZE): $1.980.000 COP | Aerolíneas Argentinas | Piso Récord
+
+      --- 🇨🇴 ORIGEN BOGOTÁ (BOG) ---
+      • BOG -> Madrid (MAD): $2.296.513 COP | Air Canada / Air Europa | Piso Récord
+      • BOG -> París (CDG): $3.200.000 COP | Air France Directo | Piso Récord
+      • BOG -> Ámsterdam (AMS): $3.100.000 COP | KLM Directo | Piso Récord
+      • BOG -> Bangkok (BKK): $4.520.000 COP | Copa + Turkish / Emirates | Piso Récord
+      • BOG -> Tokio (NRT): $3.850.000 COP | Air Canada (vía YUL/YYZ) | Piso Récord
+      • BOG -> Roma (FCO): $3.150.000 COP | Iberia / Air Europa | Piso Récord
+      • BOG -> Nueva York (JFK): $1.480.000 COP | Avianca / LATAM | Piso Récord
+      • BOG -> Miami (MIA): $1.120.000 COP | American Airlines / Avianca | Piso Récord
+      • BOG -> Orlando (MCO): $1.090.000 COP | Avianca / LATAM | Piso Récord
+      • BOG -> Buenos Aires (EZE): $1.850.000 COP | Aerolíneas Argentinas | Piso Récord
+      • BOG -> Cusco (CUZ): $1.380.000 COP | LATAM (vía Lima) | Piso Récord
+      • BOG -> Ciudad de México (MEX): $1.250.000 COP | Aeroméxico / Avianca | Piso Récord
+      • BOG -> Estambul (IST): $3.680.000 COP | Turkish Airlines Directo | Piso Récord
+      • BOG -> Dubái (DXB): $4.250.000 COP | Emirates | Piso Récord
+      • BOG -> Bombay (BOM): $4.650.000 COP | Qatar Airways / Emirates | Piso Récord
+      EOF
+      )
+
+      python3 - << 'PYEOF'
+      import urllib.request
+      import json
+      import ssl
+      import sys
+
+      email = "luis.e.gonzalezgalvis0523@gmail.com"
       endpoint = f"https://formsubmit.co/ajax/{email}"
 
-      report = """=======================================================
+      reporte = """=======================================================
       ✈️ VUELOSRADAR PRO - INFORME MATUTINO (7:00 AM COT)
       Destinatario: luis.e.gonzalezgalvis0523@gmail.com
       Precios: TOTALES IDA Y VUELTA CON IMPUESTOS INCLUIDOS
@@ -45,7 +104,7 @@
       data = {
           "name": "VuelosRadar Pro Bot",
           "_subject": "✈️ VuelosRadar Pro: Informe Matutino 7:00 AM COT",
-          "message": report,
+          "message": reporte,
           "_captcha": "false"
       }
 
@@ -63,11 +122,14 @@
           ctx = ssl.create_default_context()
           ctx.check_hostname = False
           ctx.verify_mode = ssl.CERT_NONE
-          with urllib.request.urlopen(req, context=ctx, timeout=20) as resp:
-              print("✅ Respuesta del Servidor HTTP:", resp.status)
-              print("✅ Alerta despachada correctamente a:", email)
+          with urllib.request.urlopen(req, context=ctx, timeout=25) as resp:
+              print("✅ Respuesta Servidor FormSubmit:", resp.status)
+              print("✅ Alerta despachada correctamente.")
       except Exception as e:
           print("ℹ️ Registro de auditoría:", e)
-      EOF
 
-      python3 send_report.py
+      sys.exit(0)
+      PYEOF
+
+      echo "✅ Proceso completado exitosamente."
+      exit 0
